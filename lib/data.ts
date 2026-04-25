@@ -8,7 +8,7 @@ export const personalInfo = {
   phone: "+91 8949827264",
   location: "India",
   github: "https://github.com/harsh785",
-  linkedin: "https://linkedin.com/in/harshdixit",
+  linkedin: "https://www.linkedin.com/in/harsh-dixit-156a371b0",
 };
 
 export const experiences = [

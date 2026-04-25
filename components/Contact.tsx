@@ -9,7 +9,7 @@ const contactItems = [
   { icon: Phone, label: "Phone", value: personalInfo.phone, href: `tel:${personalInfo.phone}`, color: "#7c3aed", copyable: true },
   { icon: MapPin, label: "Location", value: personalInfo.location, href: "#", color: "#10b981", copyable: false },
   { icon: GitBranch, label: "GitHub", value: "github.com/harsh785", href: personalInfo.github, color: "#f59e0b", copyable: true },
-  { icon: ExternalLink, label: "LinkedIn", value: "linkedin.com/in/harshdixit", href: personalInfo.linkedin, color: "#0ea5e9", copyable: true },
+  { icon: ExternalLink, label: "LinkedIn", value: "linkedin.com/in/harsh-dixit-156a371b0", href: personalInfo.linkedin, color: "#0ea5e9", copyable: true },
 ];
 
 function ContactItem({ icon: Icon, label, value, href, color, copyable }: typeof contactItems[0]) {

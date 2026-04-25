@@ -1,9 +1,9 @@
 export const personalInfo = {
   name: "Harsh Dixit",
   title: "Senior Cloud & DevOps Engineer",
-  tagline: "AWS SAA-C03 Certified · 4+ Years Experience",
+  tagline: "AWS SAA-C03 Certified · 5+ Years Experience",
   summary:
-    "Experienced DevOps professional with 4+ years of expertise in crafting, executing, and overseeing intricate cloud infrastructures. Skilled in utilizing various DevOps tools and methodologies, with extensive knowledge in automating infrastructures and managing configurations at scale.",
+    "Experienced DevOps professional with 5+ years of expertise in crafting, executing, and overseeing intricate cloud infrastructures. Skilled in utilizing various DevOps tools and methodologies, with extensive knowledge in automating infrastructures and managing configurations at scale.",
   email: "Harshdixit23mar@gmail.com",
   phone: "+91 8949827264",
   location: "India",

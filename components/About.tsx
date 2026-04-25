@@ -4,7 +4,7 @@ import { User, Cloud, Server, Shield } from "lucide-react";
 import { personalInfo } from "@/lib/data";
 
 const stats = [
-  { label: "Years Experience", value: "4+" },
+  { label: "Years Experience", value: "5+" },
   { label: "AWS Services Mastered", value: "20+" },
   { label: "Pipelines Built", value: "50+" },
   { label: "Certifications", value: "AWS SAA" },
@@ -39,7 +39,7 @@ export default function About() {
               {personalInfo.summary}
             </p>
             <p className="text-slate-400 leading-relaxed mb-8">
-              I specialize in designing and managing cloud-native infrastructure on AWS, automating deployments with Terraform and GitHub Actions, and building robust observability stacks. Currently driving cloud excellence at{" "}
+              I specialize in designing and managing cloud-native infrastructure on AWS, automating deployments with Terraform and GitHub Actions, and building robust observability stacks with 5+ years of hands-on experience. Currently driving cloud excellence at{" "}
               <span className="text-[#00d4ff] font-semibold">Caylent</span> as a Senior Cloud Engineer.
             </p>
 

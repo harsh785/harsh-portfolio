@@ -283,9 +283,6 @@ export default function Contact() {
         </motion.div>
       </div>
 
-      <div className="mt-16 text-center text-slate-700 text-xs">
-        Built with Next.js & ❤️ · {new Date().getFullYear()} Harsh Dixit
-      </div>
     </section>
   );
 }

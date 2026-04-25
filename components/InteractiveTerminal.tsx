@@ -122,9 +122,9 @@ export default function InteractiveTerminal() {
   };
 
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && input.trim()) {
-      run(input);
-      setInput("");
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (input.trim()) { run(input); setInput(""); }
     } else if (e.key === "ArrowUp") {
       const next = Math.min(historyIdx + 1, cmdHistory.length - 1);
       setHistoryIdx(next);
@@ -172,7 +172,10 @@ export default function InteractiveTerminal() {
           </div>
 
           {/* Body */}
-          <div className="bg-[#0d0d1a] border border-t-0 border-[#00d4ff]/15 rounded-b-xl p-5 h-80 overflow-y-auto font-mono text-sm">
+          <div
+            className="bg-[#0d0d1a] border border-t-0 border-[#00d4ff]/15 rounded-b-xl p-5 h-80 overflow-y-auto font-mono text-sm"
+            onWheel={(e) => e.stopPropagation()}
+          >
             {history.map((line, i) => (
               <div
                 key={i}

@@ -41,68 +41,6 @@ function CinematicLine({ text, size, color, delay }: { text: string; size: strin
   );
 }
 
-function PhotoCard() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={inView ? { opacity: 1, scale: 1 } : {}}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-      className="relative flex items-center justify-center"
-    >
-      {/* Spinning gradient ring */}
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        className="absolute w-[300px] h-[300px] md:w-[360px] md:h-[360px] rounded-full"
-        style={{
-          background: "conic-gradient(from 0deg, #39ff14, #00d4ff, #7c3aed, #39ff14)",
-          padding: 3,
-        }}
-      >
-        <div className="w-full h-full rounded-full bg-[#0a0a0f]" />
-      </motion.div>
-
-      {/* Second slower ring */}
-      <motion.div
-        animate={{ rotate: -360 }}
-        transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
-        className="absolute w-[330px] h-[330px] md:w-[395px] md:h-[395px] rounded-full"
-        style={{
-          border: "1px dashed rgba(0,212,255,0.2)",
-        }}
-      />
-
-      {/* Photo */}
-      <div
-        className="relative w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-full overflow-hidden z-10"
-        style={{ border: "3px solid rgba(0,212,255,0.15)" }}
-      >
-        <img
-          src="/harsh-portfolio/harsh.jpg"
-          alt="Harsh Dixit"
-          className="w-full h-full object-cover object-top"
-        />
-        {/* Subtle dark overlay at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/3"
-          style={{ background: "linear-gradient(to top, rgba(10,10,15,0.5), transparent)" }} />
-      </div>
-
-      {/* Floating badge */}
-      <motion.div
-        animate={{ y: [-4, 4, -4] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -bottom-2 -right-2 md:bottom-4 md:right-0 z-20 px-3 py-2 rounded-xl border text-xs font-mono"
-        style={{ background: "#39ff1410", borderColor: "#39ff1430", color: "#39ff14", boxShadow: "0 0 20px #39ff1420" }}
-      >
-        ● Currently @ Caylent
-      </motion.div>
-    </motion.div>
-  );
-}
 
 export default function About() {
   const sectionRef = useRef(null);
@@ -120,14 +58,7 @@ export default function About() {
       </motion.div>
 
       <div className="max-w-6xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-          {/* Left — Photo */}
-          <div className="flex justify-center lg:justify-start">
-            <PhotoCard />
-          </div>
-
-          {/* Right — Cinematic text */}
+        <div className="max-w-3xl mx-auto">
           <div>
             {/* Eyebrow */}
             <motion.p
@@ -205,3 +136,4 @@ export default function About() {
     </section>
   );
 }
+

@@ -1,159 +1,223 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, GitBranch, ExternalLink, Send, Copy, Check } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
+import { Mail, Phone, GitBranch, ExternalLink, Send, Check } from "lucide-react";
 import { personalInfo } from "@/lib/data";
 
 const cards = [
-  { icon: Mail,        label: "Email",    value: personalInfo.email,                          href: `mailto:${personalInfo.email}`,  color: "#00d4ff", emoji: "📧" },
-  { icon: Phone,       label: "Phone",    value: personalInfo.phone,                          href: `tel:${personalInfo.phone}`,     color: "#7c3aed", emoji: "📱" },
-  { icon: GitBranch,   label: "GitHub",   value: "github.com/harsh785",                      href: personalInfo.github,             color: "#f59e0b", emoji: "💻" },
-  { icon: ExternalLink,label: "LinkedIn", value: "harsh-dixit-156a371b0",                    href: personalInfo.linkedin,           color: "#0ea5e9", emoji: "🔗" },
-  { icon: Send,        label: "Available",value: "Open to opportunities",                     href: `mailto:${personalInfo.email}`,  color: "#39ff14", emoji: "🚀" },
+  { icon: Mail,         label: "Email",     value: personalInfo.email,            href: `mailto:${personalInfo.email}`, color: "#00d4ff", emoji: "📧" },
+  { icon: Phone,        label: "Phone",     value: personalInfo.phone,            href: `tel:${personalInfo.phone}`,    color: "#7c3aed", emoji: "📱" },
+  { icon: GitBranch,    label: "GitHub",    value: "github.com/harsh785",         href: personalInfo.github,            color: "#f59e0b", emoji: "💻" },
+  { icon: ExternalLink, label: "LinkedIn",  value: "harsh-dixit-156a371b0",       href: personalInfo.linkedin,          color: "#0ea5e9", emoji: "🔗" },
+  { icon: Send,         label: "Available", value: "Open to opportunities",       href: `mailto:${personalInfo.email}`, color: "#39ff14", emoji: "🚀" },
 ];
 
-// ── Scratch canvas ────────────────────────────────────────────────────────────
-function ScratchCard({ card, onRevealed }: { card: typeof cards[0]; onRevealed: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const isDrawing = useRef(false);
-  const hasNotified = useRef(false);
+// Natural float positions so cards don't overlap (% of container)
+const basePositions = [
+  { x: 10,  y: 8  },
+  { x: 60,  y: 5  },
+  { x: 35,  y: 42 },
+  { x: 8,   y: 62 },
+  { x: 62,  y: 60 },
+];
 
-  // Fill the scratch layer once on mount
+const PULL_RADIUS   = 180;  // px — within this distance card is attracted
+const MAX_PULL      = 45;   // px — max displacement toward cursor
+const FLOAT_RANGE   = 10;   // px — ambient float amplitude
+
+function MagneticCard({
+  card,
+  basePos,
+  mouseX,
+  mouseY,
+  containerRef,
+}: {
+  card: typeof cards[0];
+  basePos: { x: number; y: number };
+  mouseX: React.MutableRefObject<number>;
+  mouseY: React.MutableRefObject<number>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const cardRef  = useRef<HTMLDivElement>(null);
+  const rafRef   = useRef<number>(0);
+  const [copied, setCopied]   = useState(false);
+  const [ripple, setRipple]   = useState(false);
+  const [glowing, setGlowing] = useState(false);
+
+  // Sprung motion values for smooth magnetic movement
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const springX = useSpring(rawX, { stiffness: 180, damping: 18, mass: 0.6 });
+  const springY = useSpring(rawY, { stiffness: 180, damping: 18, mass: 0.6 });
+
+  // Ambient float offset
+  const [floatOffset, setFloatOffset] = useState({ x: 0, y: 0 });
+
+  // Unique float phase per card so they don't sync
+  const phase = useRef(Math.random() * Math.PI * 2);
+  const phaseY = useRef(Math.random() * Math.PI * 2);
+
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    let t = 0;
+    const floatLoop = () => {
+      t += 0.012;
+      setFloatOffset({
+        x: Math.sin(t + phase.current)  * FLOAT_RANGE * 0.5,
+        y: Math.cos(t + phaseY.current) * FLOAT_RANGE,
+      });
+      rafRef.current = requestAnimationFrame(floatLoop);
+    };
+    floatLoop();
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
 
-    canvas.width  = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+  // Magnetic pull loop
+  useEffect(() => {
+    let raf: number;
+    const loop = () => {
+      if (cardRef.current && containerRef.current) {
+        const cardRect      = cardRef.current.getBoundingClientRect();
+        const cardCX        = cardRect.left + cardRect.width  / 2;
+        const cardCY        = cardRect.top  + cardRect.height / 2;
+        const dx            = mouseX.current - cardCX;
+        const dy            = mouseY.current - cardCY;
+        const dist          = Math.sqrt(dx * dx + dy * dy);
 
-    // Textured scratch surface
-    ctx.fillStyle = "#1a1a2e";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (dist < PULL_RADIUS && dist > 0) {
+          const strength = (1 - dist / PULL_RADIUS) ** 1.5;
+          rawX.set(dx * strength * (MAX_PULL / PULL_RADIUS) * 3);
+          rawY.set(dy * strength * (MAX_PULL / PULL_RADIUS) * 3);
+          setGlowing(dist < 100);
+        } else {
+          rawX.set(0);
+          rawY.set(0);
+          setGlowing(false);
+        }
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => cancelAnimationFrame(raf);
+  }, [containerRef, mouseX, mouseY, rawX, rawY]);
 
-    // Subtle grid texture
-    ctx.strokeStyle = "rgba(255,255,255,0.04)";
-    ctx.lineWidth = 1;
-    for (let x = 0; x < canvas.width; x += 12) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-    }
-    for (let y = 0; y < canvas.height; y += 12) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-    }
-
-    // Label on top of scratch surface
-    ctx.fillStyle = "rgba(255,255,255,0.15)";
-    ctx.font = "bold 13px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("✦ SCRATCH TO REVEAL ✦", canvas.width / 2, canvas.height / 2 - 8);
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    ctx.font = "22px sans-serif";
-    ctx.fillText(card.emoji, canvas.width / 2, canvas.height / 2 + 20);
-  }, [card.emoji]);
-
-  const scratch = (x: number, y: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(x, y, 28, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Check % scratched
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let cleared = 0;
-    for (let i = 3; i < data.length; i += 4) if (data[i] === 0) cleared++;
-    const pct = cleared / (canvas.width * canvas.height);
-    if (pct > 0.5 && !hasNotified.current) {
-      hasNotified.current = true;
-      setRevealed(true);
-      onRevealed();
-      // Fade canvas out
-      canvas.style.transition = "opacity 0.4s";
-      canvas.style.opacity = "0";
-      setTimeout(() => { canvas.style.display = "none"; }, 400);
-    }
-  };
-
-  const getPos = (e: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
-    const rect = canvas.getBoundingClientRect();
-    if ("touches" in e) {
-      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-    }
-    return { x: (e as React.MouseEvent).clientX - rect.left, y: (e as React.MouseEvent).clientY - rect.top };
-  };
-
-  const copy = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigator.clipboard.writeText(card.value);
     setCopied(true);
+    setRipple(true);
     setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setRipple(false), 600);
   };
 
   return (
-    <div className="relative rounded-2xl overflow-hidden" style={{ height: 120 }}>
-      {/* Revealed layer underneath */}
-      <a
-        href={card.href}
-        target={card.href.startsWith("http") ? "_blank" : undefined}
-        rel="noopener noreferrer"
-        className="absolute inset-0 flex items-center gap-4 px-5"
-        style={{ background: `${card.color}10`, borderRadius: 16 }}
-      >
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
-          style={{ background: `${card.color}15`, borderColor: `${card.color}30` }}>
-          <card.icon size={20} style={{ color: card.color }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-mono mb-0.5" style={{ color: card.color }}>{card.label}</p>
-          <p className="text-white font-semibold text-sm truncate">{card.value}</p>
-        </div>
-        <AnimatePresence>
-          {revealed && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={copy}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
-              style={{ color: copied ? "#39ff14" : "#64748b" }}
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </a>
+    <motion.div
+      ref={cardRef}
+      style={{
+        position: "absolute",
+        left: `${basePos.x}%`,
+        top:  `${basePos.y}%`,
+        x: springX,
+        y: springY,
+        translateX: floatOffset.x,
+        translateY: floatOffset.y,
+      }}
+      className="cursor-pointer select-none"
+      whileTap={{ scale: 0.93 }}
+      onClick={handleClick}
+    >
+      {/* Ripple */}
+      <AnimatePresence>
+        {ripple && (
+          <motion.div
+            className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+            initial={{ opacity: 0.8, scale: 1 }}
+            animate={{ opacity: 0, scale: 1.8 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ background: `radial-gradient(circle, ${card.color}80, transparent)` }}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Scratch surface — sits on top */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full rounded-2xl cursor-crosshair"
-        style={{ border: "1px solid rgba(255,255,255,0.06)", touchAction: "none" }}
-        onMouseDown={(e) => { isDrawing.current = true; scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
-        onMouseMove={(e) => { if (isDrawing.current) scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
-        onMouseUp={() => { isDrawing.current = false; }}
-        onMouseLeave={() => { isDrawing.current = false; }}
-        onTouchStart={(e) => { isDrawing.current = true; scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
-        onTouchMove={(e) => { e.preventDefault(); scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
-        onTouchEnd={() => { isDrawing.current = false; }}
-      />
-    </div>
+      <motion.div
+        animate={{
+          boxShadow: glowing
+            ? `0 0 0 2px ${card.color}80, 0 0 40px ${card.color}40, 0 8px 32px rgba(0,0,0,0.4)`
+            : `0 0 0 1px ${card.color}20, 0 4px 20px rgba(0,0,0,0.3)`,
+        }}
+        transition={{ duration: 0.25 }}
+        className="relative rounded-2xl px-5 py-4 backdrop-blur-md w-52"
+        style={{ background: `linear-gradient(135deg, ${card.color}12, rgba(15,15,30,0.95))`, border: `1px solid ${card.color}20` }}
+      >
+        {/* Top row */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center border"
+            style={{ background: `${card.color}15`, borderColor: `${card.color}25` }}>
+            <card.icon size={16} style={{ color: card.color }} />
+          </div>
+
+          <AnimatePresence mode="wait">
+            {copied ? (
+              <motion.span
+                key="check"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                className="text-xs font-mono px-2 py-0.5 rounded-full"
+                style={{ color: "#39ff14", background: "#39ff1415", border: "1px solid #39ff1430" }}
+              >
+                <Check size={11} className="inline mr-0.5" />copied!
+              </motion.span>
+            ) : (
+              <motion.span
+                key="hint"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: glowing ? 1 : 0.4 }}
+                className="text-xs text-slate-600 font-mono"
+              >
+                click to copy
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Label */}
+        <p className="text-xs font-mono mb-0.5" style={{ color: card.color }}>{card.label}</p>
+
+        {/* Value */}
+        <p className="text-white text-sm font-semibold truncate">{card.value}</p>
+
+        {/* Glow dot */}
+        <motion.div
+          className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full"
+          style={{ background: card.color }}
+          animate={{ opacity: glowing ? [1, 0.3, 1] : 0.3, scale: glowing ? [1, 1.4, 1] : 1 }}
+          transition={{ repeat: Infinity, duration: 1.2 }}
+        />
+      </motion.div>
+    </motion.div>
   );
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Contact() {
-  const [revealedCount, setRevealedCount] = useState(0);
-  const [key, setKey] = useState(0); // reset trick
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mouseX = useRef(-9999);
+  const mouseY = useRef(-9999);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    mouseX.current = e.clientX;
+    mouseY.current = e.clientY;
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [handleMouseMove]);
 
   return (
-    <section id="contact" className="py-24 px-6 bg-[#0d0d14]">
-      <div className="max-w-2xl mx-auto">
+    <section id="contact" className="py-24 px-6 bg-[#0a0a0f] overflow-hidden">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -163,86 +227,63 @@ export default function Contact() {
         >
           <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
             <Send size={14} />
-            <span>contact.scratch</span>
+            <span>contact.magnetic</span>
           </div>
           <h2 className="text-4xl font-bold text-white">Get In Touch</h2>
-          <p className="text-slate-400 mt-2 text-sm">
-            Scratch each card to reveal my contact info
+          <p className="text-slate-500 mt-2 text-sm font-mono">
+            move your cursor near the cards · click to copy
           </p>
         </motion.div>
 
-        {/* Progress */}
-        <div className="flex items-center gap-3 mb-8 max-w-xs mx-auto">
-          <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: "linear-gradient(90deg, #00d4ff, #39ff14)" }}
-              animate={{ width: `${(revealedCount / cards.length) * 100}%` }}
-              transition={{ duration: 0.4 }}
-            />
-          </div>
-          <span className="text-xs font-mono text-slate-600">{revealedCount}/{cards.length}</span>
-        </div>
-
-        {/* Cards */}
+        {/* Floating arena */}
         <motion.div
-          key={key}
+          ref={containerRef}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-3"
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="relative w-full"
+          style={{ height: 420 }}
         >
+          {/* Subtle radial bg */}
+          <div className="absolute inset-0 rounded-3xl"
+            style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(0,212,255,0.03) 0%, transparent 70%)" }} />
+
+          {/* Orbit rings (decorative) */}
+          {[140, 220, 300].map((r) => (
+            <div key={r} className="absolute rounded-full border border-white/[0.03] -translate-x-1/2 -translate-y-1/2"
+              style={{ width: r * 2, height: r * 2, top: "50%", left: "50%" }} />
+          ))}
+
           {cards.map((card, i) => (
-            <motion.div
-              key={`${key}-${i}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <ScratchCard
-                card={card}
-                onRevealed={() => setRevealedCount((c) => c + 1)}
-              />
-            </motion.div>
+            <MagneticCard
+              key={card.label}
+              card={card}
+              basePos={basePositions[i]}
+              mouseX={mouseX}
+              mouseY={mouseY}
+              containerRef={containerRef}
+            />
           ))}
         </motion.div>
 
-        {/* All revealed celebration */}
-        <AnimatePresence>
-          {revealedCount === cards.length && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8 text-center"
-            >
-              <motion.p
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: 3, duration: 0.4 }}
-                className="text-2xl mb-2"
-              >
-                🎉
-              </motion.p>
-              <p className="text-slate-400 text-sm mb-4">All cards revealed! Let's connect.</p>
-              <div className="flex gap-3 justify-center flex-wrap">
-                <a
-                  href={`mailto:${personalInfo.email}`}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-black text-sm transition-all hover:scale-105"
-                  style={{ background: "#00d4ff", boxShadow: "0 0 20px #00d4ff30" }}
-                >
-                  <Mail size={15} /> Send a Message
-                </a>
-                <button
-                  onClick={() => { setRevealedCount(0); setKey((k) => k + 1); }}
-                  className="px-6 py-3 rounded-xl text-slate-500 border border-white/8 hover:text-white hover:border-white/20 transition-all text-sm"
-                >
-                  Scratch again
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Direct CTA below */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mt-4"
+        >
+          <a
+            href={`mailto:${personalInfo.email}`}
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-black text-sm transition-all hover:scale-105"
+            style={{ background: "#00d4ff", boxShadow: "0 0 24px #00d4ff30" }}
+          >
+            <Mail size={15} /> Send a Message
+          </a>
+        </motion.div>
       </div>
 
-      <div className="mt-20 text-center text-slate-700 text-xs">
+      <div className="mt-16 text-center text-slate-700 text-xs">
         Built with Next.js & ❤️ · {new Date().getFullYear()} Harsh Dixit
       </div>
     </section>

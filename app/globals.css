@@ -34,6 +34,20 @@ body {
   border-radius: 2px;
 }
 
+.neon-green-text {
+  color: #39ff14;
+  text-shadow: 0 0 20px #39ff1480, 0 0 40px #39ff1430;
+  animation: neon-flicker 5s linear infinite;
+}
+
+@keyframes neon-flicker {
+  0%, 95%, 100% { text-shadow: 0 0 20px #39ff1480, 0 0 40px #39ff1430; }
+  96% { text-shadow: none; opacity: 0.8; }
+  97% { text-shadow: 0 0 20px #39ff1480, 0 0 40px #39ff1430; }
+  98% { text-shadow: none; opacity: 0.9; }
+  99% { text-shadow: 0 0 30px #39ff14aa, 0 0 60px #39ff1450; }
+}
+
 .gradient-text {
   background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #00d4ff 100%);
   background-size: 200% auto;

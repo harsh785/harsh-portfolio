@@ -97,7 +97,7 @@ export default function Hero() {
         >
           <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tight leading-none">
             <span className="text-white">Harsh </span>
-            <span className="gradient-text">
+            <span className="neon-green-text">
               <GlitchText text="Dixit" />
             </span>
           </h1>

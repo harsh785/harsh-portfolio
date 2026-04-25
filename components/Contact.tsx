@@ -1,254 +1,159 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, GitBranch, ExternalLink, Copy, Check, Send, RefreshCw } from "lucide-react";
+import { Mail, Phone, GitBranch, ExternalLink, Send, Copy, Check } from "lucide-react";
 import { personalInfo } from "@/lib/data";
 
-// ── Pipeline stages ───────────────────────────────────────────────────────────
-const stages = [
-  {
-    id: "init",
-    label: "git push",
-    icon: "📦",
-    fixMsg: "Pushing code to origin/main...",
-    output: ["Enumerating objects: 5, done.", "Writing objects: 100%", "Branch 'main' set up to track remote.", "✓ Code pushed successfully"],
-    reveals: { label: "Email", value: personalInfo.email, href: `mailto:${personalInfo.email}`, icon: Mail, color: "#00d4ff" },
-  },
-  {
-    id: "build",
-    label: "docker build",
-    icon: "🐳",
-    fixMsg: "Building Docker image...",
-    output: ["Step 1/4 : FROM node:20-alpine", "Step 2/4 : RUN npm ci", "Step 3/4 : COPY . .", "✓ Successfully built image"],
-    reveals: { label: "Phone", value: personalInfo.phone, href: `tel:${personalInfo.phone}`, icon: Phone, color: "#7c3aed" },
-  },
-  {
-    id: "test",
-    label: "run tests",
-    icon: "🧪",
-    fixMsg: "Running test suite...",
-    output: ["✓ Unit tests passed (42/42)", "✓ Integration tests passed", "✓ Coverage: 94%", "✓ All checks passed"],
-    reveals: { label: "GitHub", value: "github.com/harsh785", href: personalInfo.github, icon: GitBranch, color: "#f59e0b" },
-  },
-  {
-    id: "scan",
-    label: "security scan",
-    icon: "🛡️",
-    fixMsg: "Running security checks...",
-    output: ["Scanning for vulnerabilities...", "✓ 0 critical issues found", "✓ IAM policies validated", "✓ Security scan passed"],
-    reveals: { label: "LinkedIn", value: "harsh-dixit-156a371b0", href: personalInfo.linkedin, icon: ExternalLink, color: "#0ea5e9" },
-  },
-  {
-    id: "deploy",
-    label: "kubectl apply",
-    icon: "🚀",
-    fixMsg: "Deploying to production...",
-    output: ["deployment.apps/harsh configured", "service/contact-harsh unchanged", "✓ Rollout complete (3/3 pods ready)", "✓ DEPLOYMENT SUCCESSFUL 🎉"],
-    reveals: { label: "Available", value: "Open to opportunities", href: `mailto:${personalInfo.email}`, icon: Send, color: "#39ff14" },
-  },
+const cards = [
+  { icon: Mail,        label: "Email",    value: personalInfo.email,                          href: `mailto:${personalInfo.email}`,  color: "#00d4ff", emoji: "📧" },
+  { icon: Phone,       label: "Phone",    value: personalInfo.phone,                          href: `tel:${personalInfo.phone}`,     color: "#7c3aed", emoji: "📱" },
+  { icon: GitBranch,   label: "GitHub",   value: "github.com/harsh785",                      href: personalInfo.github,             color: "#f59e0b", emoji: "💻" },
+  { icon: ExternalLink,label: "LinkedIn", value: "harsh-dixit-156a371b0",                    href: personalInfo.linkedin,           color: "#0ea5e9", emoji: "🔗" },
+  { icon: Send,        label: "Available",value: "Open to opportunities",                     href: `mailto:${personalInfo.email}`,  color: "#39ff14", emoji: "🚀" },
 ];
 
-// ── Copy button ───────────────────────────────────────────────────────────────
-function CopyBtn({ text, color }: { text: string; color: string }) {
+// ── Scratch canvas ────────────────────────────────────────────────────────────
+function ScratchCard({ card, onRevealed }: { card: typeof cards[0]; onRevealed: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const isDrawing = useRef(false);
+  const hasNotified = useRef(false);
+
+  // Fill the scratch layer once on mount
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    // Textured scratch surface
+    ctx.fillStyle = "#1a1a2e";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle grid texture
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 12) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 12) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // Label on top of scratch surface
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    ctx.font = "bold 13px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("✦ SCRATCH TO REVEAL ✦", canvas.width / 2, canvas.height / 2 - 8);
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.font = "22px sans-serif";
+    ctx.fillText(card.emoji, canvas.width / 2, canvas.height / 2 + 20);
+  }, [card.emoji]);
+
+  const scratch = (x: number, y: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.arc(x, y, 28, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Check % scratched
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let cleared = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i] === 0) cleared++;
+    const pct = cleared / (canvas.width * canvas.height);
+    if (pct > 0.5 && !hasNotified.current) {
+      hasNotified.current = true;
+      setRevealed(true);
+      onRevealed();
+      // Fade canvas out
+      canvas.style.transition = "opacity 0.4s";
+      canvas.style.opacity = "0";
+      setTimeout(() => { canvas.style.display = "none"; }, 400);
+    }
+  };
+
+  const getPos = (e: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    if ("touches" in e) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: (e as React.MouseEvent).clientX - rect.left, y: (e as React.MouseEvent).clientY - rect.top };
+  };
+
+  const copy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigator.clipboard.writeText(card.value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="p-1 rounded-md transition-all hover:bg-white/10"
-      style={{ color: copied ? "#39ff14" : "#64748b" }}
-    >
-      {copied ? <Check size={13} /> : <Copy size={13} />}
-    </button>
-  );
-}
-
-// ── Single pipeline stage ─────────────────────────────────────────────────────
-function Stage({
-  stage,
-  status,
-  onClick,
-  stageIndex,
-  fixedCount,
-}: {
-  stage: typeof stages[0];
-  status: "idle" | "fixing" | "done";
-  onClick: () => void;
-  stageIndex: number;
-  fixedCount: number;
-}) {
-  const locked = stageIndex > fixedCount;
-
-  return (
-    <div className="flex flex-col items-center gap-1 relative">
-      {/* Connector line */}
-      {stageIndex < stages.length - 1 && (
-        <div className="absolute left-full top-6 w-full h-px -translate-y-1/2 hidden md:block" style={{ width: "calc(100% - 48px)", left: "calc(50% + 24px)" }}>
-          <div className="h-px w-full bg-white/5" />
-          <motion.div
-            className="h-px absolute top-0 left-0"
-            style={{ background: "#39ff14" }}
-            initial={{ width: 0 }}
-            animate={{ width: status === "done" ? "100%" : 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          />
-        </div>
-      )}
-
-      {/* Node */}
-      <motion.button
-        onClick={!locked && status === "idle" ? onClick : undefined}
-        whileHover={!locked && status === "idle" ? { scale: 1.1 } : {}}
-        whileTap={!locked && status === "idle" ? { scale: 0.95 } : {}}
-        className="relative w-12 h-12 rounded-xl flex items-center justify-center text-xl border transition-all duration-300"
-        style={{
-          background:
-            status === "done" ? "#39ff1415" :
-            status === "fixing" ? "#f59e0b15" :
-            locked ? "#1e1e2e40" : "#1e1e2e",
-          borderColor:
-            status === "done" ? "#39ff1450" :
-            status === "fixing" ? "#f59e0b50" :
-            locked ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.1)",
-          boxShadow: status === "done" ? "0 0 20px #39ff1425" : "none",
-          cursor: locked || status !== "idle" ? "default" : "pointer",
-          opacity: locked ? 0.4 : 1,
-        }}
+    <div className="relative rounded-2xl overflow-hidden" style={{ height: 120 }}>
+      {/* Revealed layer underneath */}
+      <a
+        href={card.href}
+        target={card.href.startsWith("http") ? "_blank" : undefined}
+        rel="noopener noreferrer"
+        className="absolute inset-0 flex items-center gap-4 px-5"
+        style={{ background: `${card.color}10`, borderRadius: 16 }}
       >
-        {status === "fixing" ? (
-          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}>
-            <RefreshCw size={16} className="text-yellow-400" />
-          </motion.div>
-        ) : status === "done" ? (
-          <span>{stage.icon}</span>
-        ) : (
-          <span className={locked ? "grayscale" : ""}>
-            {locked ? "🔒" : stage.icon}
-          </span>
-        )}
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
+          style={{ background: `${card.color}15`, borderColor: `${card.color}30` }}>
+          <card.icon size={20} style={{ color: card.color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-mono mb-0.5" style={{ color: card.color }}>{card.label}</p>
+          <p className="text-white font-semibold text-sm truncate">{card.value}</p>
+        </div>
+        <AnimatePresence>
+          {revealed && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={copy}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
+              style={{ color: copied ? "#39ff14" : "#64748b" }}
+            >
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </a>
 
-        {/* Pulse on idle+unlocked */}
-        {status === "idle" && !locked && (
-          <motion.div
-            className="absolute inset-0 rounded-xl border border-red-500/50"
-            animate={{ opacity: [1, 0] }}
-            transition={{ repeat: Infinity, duration: 1.2 }}
-          />
-        )}
-      </motion.button>
-
-      <span className="text-xs font-mono text-center whitespace-nowrap"
-        style={{ color: status === "done" ? "#39ff14" : status === "fixing" ? "#f59e0b" : locked ? "#334155" : "#94a3b8" }}>
-        {stage.label}
-      </span>
-
-      {/* Status */}
-      <span className="text-xs font-mono"
-        style={{ color: status === "done" ? "#39ff14" : status === "fixing" ? "#f59e0b" : locked ? "#1e293b" : "#ef4444" }}>
-        {status === "done" ? "✓ pass" : status === "fixing" ? "running" : locked ? "locked" : "✗ fail"}
-      </span>
+      {/* Scratch surface — sits on top */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full rounded-2xl cursor-crosshair"
+        style={{ border: "1px solid rgba(255,255,255,0.06)", touchAction: "none" }}
+        onMouseDown={(e) => { isDrawing.current = true; scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
+        onMouseMove={(e) => { if (isDrawing.current) scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
+        onMouseUp={() => { isDrawing.current = false; }}
+        onMouseLeave={() => { isDrawing.current = false; }}
+        onTouchStart={(e) => { isDrawing.current = true; scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
+        onTouchMove={(e) => { e.preventDefault(); scratch(...Object.values(getPos(e, e.currentTarget)) as [number, number]); }}
+        onTouchEnd={() => { isDrawing.current = false; }}
+      />
     </div>
-  );
-}
-
-// ── Terminal output panel ─────────────────────────────────────────────────────
-function TerminalOutput({ lines, color }: { lines: string[]; color: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      className="rounded-xl overflow-hidden border border-white/5 font-mono text-xs"
-    >
-      <div className="bg-[#1a1a2e] px-3 py-2 flex items-center gap-1.5">
-        <div className="w-2 h-2 rounded-full bg-[#ff5f57]" />
-        <div className="w-2 h-2 rounded-full bg-[#ffbd2e]" />
-        <div className="w-2 h-2 rounded-full bg-[#28c840]" />
-        <span className="ml-2 text-slate-600 text-xs">pipeline output</span>
-      </div>
-      <div className="bg-[#0d0d1a] p-4 space-y-1">
-        {lines.map((line, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.25 }}
-            style={{ color: line.startsWith("✓") ? color : "#64748b" }}
-          >
-            {line}
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Revealed contact card ─────────────────────────────────────────────────────
-function RevealedCard({ item }: { item: typeof stages[0]["reveals"] }) {
-  return (
-    <motion.a
-      href={item.href}
-      target={item.href.startsWith("http") ? "_blank" : undefined}
-      rel="noopener noreferrer"
-      initial={{ opacity: 0, scale: 0.8, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="flex items-center gap-3 p-3 rounded-xl border group transition-all duration-200"
-      style={{ background: `${item.color}08`, borderColor: `${item.color}25` }}
-    >
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border"
-        style={{ background: `${item.color}15`, borderColor: `${item.color}25` }}>
-        <item.icon size={14} style={{ color: item.color }} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-slate-500">{item.label}</p>
-        <p className="text-slate-200 text-xs font-medium truncate group-hover:text-white transition-colors">{item.value}</p>
-      </div>
-      <CopyBtn text={item.value} color={item.color} />
-    </motion.a>
   );
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Contact() {
-  const [statuses, setStatuses] = useState<("idle" | "fixing" | "done")[]>(
-    stages.map(() => "idle")
-  );
-  const [activeOutput, setActiveOutput] = useState<number | null>(null);
-  const [allDone, setAllDone] = useState(false);
-
-  const fixedCount = statuses.filter((s) => s === "done").length;
-
-  const handleFix = (idx: number) => {
-    if (statuses[idx] !== "idle") return;
-
-    // Set fixing
-    setStatuses((prev) => prev.map((s, i) => (i === idx ? "fixing" : s)));
-    setActiveOutput(idx);
-
-    // After 2s → done
-    setTimeout(() => {
-      setStatuses((prev) => {
-        const next = prev.map((s, i) => (i === idx ? "done" : s));
-        if (next.every((s) => s === "done")) setTimeout(() => setAllDone(true), 400);
-        return next;
-      });
-    }, 2000);
-  };
-
-  const reset = () => {
-    setStatuses(stages.map(() => "idle"));
-    setActiveOutput(null);
-    setAllDone(false);
-  };
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [key, setKey] = useState(0); // reset trick
 
   return (
     <section id="contact" className="py-24 px-6 bg-[#0d0d14]">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -258,136 +163,88 @@ export default function Contact() {
         >
           <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
             <Send size={14} />
-            <span>contact.pipeline</span>
+            <span>contact.scratch</span>
           </div>
-          <h2 className="text-4xl font-bold text-white">Deploy to Reach Me</h2>
-          <p className="text-slate-400 mt-2">
-            The pipeline is broken. Fix each stage to reveal my contact info.
+          <h2 className="text-4xl font-bold text-white">Get In Touch</h2>
+          <p className="text-slate-400 mt-2 text-sm">
+            Scratch each card to reveal my contact info
           </p>
         </motion.div>
 
-        {/* Progress bar */}
-        <div className="flex items-center gap-3 mb-10 max-w-sm mx-auto">
-          <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+        {/* Progress */}
+        <div className="flex items-center gap-3 mb-8 max-w-xs mx-auto">
+          <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: "linear-gradient(90deg, #39ff1460, #39ff14)" }}
-              animate={{ width: `${(fixedCount / stages.length) * 100}%` }}
+              style={{ background: "linear-gradient(90deg, #00d4ff, #39ff14)" }}
+              animate={{ width: `${(revealedCount / cards.length) * 100}%` }}
               transition={{ duration: 0.4 }}
             />
           </div>
-          <span className="text-xs font-mono text-slate-500">{fixedCount}/{stages.length} fixed</span>
+          <span className="text-xs font-mono text-slate-600">{revealedCount}/{cards.length}</span>
         </div>
 
-        {/* Pipeline nodes */}
-        <div className="relative grid grid-cols-5 gap-2 mb-8 px-4">
-          {stages.map((stage, i) => (
-            <Stage
-              key={stage.id}
-              stage={stage}
-              status={statuses[i]}
-              onClick={() => handleFix(i)}
-              stageIndex={i}
-              fixedCount={fixedCount}
-            />
-          ))}
-        </div>
-
-        {/* Terminal output */}
-        <div className="mb-8">
-          <AnimatePresence mode="wait">
-            {activeOutput !== null && (
-              <TerminalOutput
-                key={activeOutput}
-                lines={statuses[activeOutput] === "fixing"
-                  ? [stages[activeOutput].fixMsg]
-                  : stages[activeOutput].output}
-                color="#39ff14"
+        {/* Cards */}
+        <motion.div
+          key={key}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-3"
+        >
+          {cards.map((card, i) => (
+            <motion.div
+              key={`${key}-${i}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+            >
+              <ScratchCard
+                card={card}
+                onRevealed={() => setRevealedCount((c) => c + 1)}
               />
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Revealed contacts */}
-        <AnimatePresence>
-          {fixedCount > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8"
-            >
-              {stages.slice(0, fixedCount).map((stage) =>
-                statuses[stages.indexOf(stage)] === "done" ? (
-                  <RevealedCard key={stage.id} item={stage.reveals} />
-                ) : null
-              )}
             </motion.div>
-          )}
-        </AnimatePresence>
+          ))}
+        </motion.div>
 
-        {/* Success state */}
+        {/* All revealed celebration */}
         <AnimatePresence>
-          {allDone && (
+          {revealedCount === cards.length && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="rounded-2xl p-8 text-center border mb-6"
-              style={{ background: "#39ff1408", borderColor: "#39ff1430" }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 text-center"
             >
-              <motion.div
-                animate={{ rotate: [0, -10, 10, -5, 0], scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.6 }}
-                className="text-5xl mb-4"
+              <motion.p
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: 3, duration: 0.4 }}
+                className="text-2xl mb-2"
               >
                 🎉
-              </motion.div>
-              <h3 className="text-2xl font-black text-white mb-2">Pipeline Deployed!</h3>
-              <p className="text-slate-400 text-sm mb-6">
-                All stages passing. You now have full access to reach me.
-              </p>
-              <div className="flex items-center justify-center gap-4 flex-wrap">
+              </motion.p>
+              <p className="text-slate-400 text-sm mb-4">All cards revealed! Let's connect.</p>
+              <div className="flex gap-3 justify-center flex-wrap">
                 <a
                   href={`mailto:${personalInfo.email}`}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-black transition-all hover:scale-105"
-                  style={{ background: "#39ff14", boxShadow: "0 0 20px #39ff1440" }}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-black text-sm transition-all hover:scale-105"
+                  style={{ background: "#00d4ff", boxShadow: "0 0 20px #00d4ff30" }}
                 >
-                  <Mail size={16} /> Send a Message
+                  <Mail size={15} /> Send a Message
                 </a>
                 <button
-                  onClick={reset}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl border text-slate-400 hover:text-white hover:border-white/20 transition-all text-sm"
-                  style={{ borderColor: "rgba(255,255,255,0.08)" }}
+                  onClick={() => { setRevealedCount(0); setKey((k) => k + 1); }}
+                  className="px-6 py-3 rounded-xl text-slate-500 border border-white/8 hover:text-white hover:border-white/20 transition-all text-sm"
                 >
-                  <RefreshCw size={14} /> Reset Pipeline
+                  Scratch again
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Hint */}
-        {fixedCount === 0 && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="text-center text-slate-600 text-xs font-mono"
-          >
-            ↑ click the failing stage to start fixing
-          </motion.p>
-        )}
       </div>
 
-      {/* Footer */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        className="mt-20 text-center text-slate-700 text-xs"
-      >
-        <p>Built with Next.js & ❤️ · {new Date().getFullYear()} Harsh Dixit</p>
-      </motion.div>
+      <div className="mt-20 text-center text-slate-700 text-xs">
+        Built with Next.js & ❤️ · {new Date().getFullYear()} Harsh Dixit
+      </div>
     </section>
   );
 }

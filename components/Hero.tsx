@@ -1,94 +1,133 @@
 "use client";
 import { motion } from "framer-motion";
-import { GitBranch, ExternalLink, Mail, ChevronDown, Terminal } from "lucide-react";
+import { GitBranch, ExternalLink, Mail, ChevronDown } from "lucide-react";
 import { personalInfo } from "@/lib/data";
+import MatrixRain from "./MatrixRain";
+import { useState, useEffect } from "react";
 
-const floatingIcons = ["☁️", "🚀", "⚙️", "🐳", "🔧", "📊", "🛡️", "⚡"];
+const roles = [
+  "Senior Cloud Engineer",
+  "AWS Architect",
+  "DevOps Specialist",
+  "Infrastructure Automator",
+  "Kubernetes Engineer",
+];
+
+function GlitchText({ text }: { text: string }) {
+  const [glitching, setGlitching] = useState(false);
+
+  useEffect(() => {
+    const trigger = () => {
+      setGlitching(true);
+      setTimeout(() => setGlitching(false), 300);
+    };
+    const interval = setInterval(trigger, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span
+      className="relative inline-block"
+      style={glitching ? {
+        textShadow: "2px 0 #ff00ff, -2px 0 #00ffff",
+        transform: "skew(-2deg)",
+      } : {}}
+    >
+      {text}
+    </span>
+  );
+}
+
+function TypewriterRoles() {
+  const [idx, setIdx] = useState(0);
+  const [displayed, setDisplayed] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const target = roles[idx];
+    if (!deleting && displayed === target) {
+      const t = setTimeout(() => setDeleting(true), 2000);
+      return () => clearTimeout(t);
+    }
+    if (deleting && displayed === "") {
+      setDeleting(false);
+      setIdx((i) => (i + 1) % roles.length);
+      return;
+    }
+    const speed = deleting ? 40 : 70;
+    const t = setTimeout(() => {
+      setDisplayed(deleting ? displayed.slice(0, -1) : target.slice(0, displayed.length + 1));
+    }, speed);
+    return () => clearTimeout(t);
+  }, [displayed, deleting, idx]);
+
+  return (
+    <span className="text-[#00d4ff]">
+      {displayed}
+      <span className="animate-pulse">|</span>
+    </span>
+  );
+}
 
 export default function Hero() {
   return (
-    <section
-      id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center grid-bg overflow-hidden"
-    >
-      {/* Radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#00d4ff]/5 blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-[#7c3aed]/5 blur-3xl pointer-events-none" />
+    <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      <MatrixRain />
 
-      {/* Floating emoji icons */}
-      {floatingIcons.map((icon, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-2xl opacity-20 pointer-events-none select-none"
-          style={{
-            top: `${10 + ((i * 37) % 80)}%`,
-            left: `${5 + ((i * 23) % 90)}%`,
-          }}
-          animate={{
-            y: [0, -15, 0],
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            duration: 4 + (i % 3),
-            repeat: Infinity,
-            delay: i * 0.5,
-            ease: "easeInOut",
-          }}
-        >
-          {icon}
-        </motion.div>
-      ))}
+      {/* Radial glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#00d4ff]/4 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#7c3aed]/6 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-        {/* Terminal badge */}
+        {/* Status badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e1e2e] border border-[#00d4ff]/20 text-[#00d4ff] text-sm font-mono mb-8"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e1e2e]/80 border border-[#00d4ff]/20 text-sm font-mono mb-8 backdrop-blur-sm"
         >
-          <Terminal size={14} />
-          <span>$ whoami</span>
-          <span className="inline-block w-2 h-4 bg-[#00d4ff] animate-pulse ml-1" />
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-green-400 font-medium">Available for opportunities</span>
         </motion.div>
 
-        <motion.h1
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-bold mb-4 tracking-tight"
         >
-          <span className="text-white">{personalInfo.name.split(" ")[0]} </span>
-          <span className="gradient-text">{personalInfo.name.split(" ")[1]}</span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-xl md:text-2xl text-slate-400 font-light mb-2"
-        >
-          {personalInfo.title}
-        </motion.p>
+          <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tight leading-none">
+            <span className="text-white">Harsh </span>
+            <span className="gradient-text">
+              <GlitchText text="Dixit" />
+            </span>
+          </h1>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="flex items-center justify-center gap-2 mb-8"
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="text-2xl md:text-3xl font-light text-slate-300 mb-3 h-10"
         >
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-sm text-green-400 font-medium">{personalInfo.tagline}</span>
+          <TypewriterRoles />
         </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.4 }}
-          className="text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="flex items-center justify-center gap-3 mb-8 flex-wrap"
         >
-          {personalInfo.summary}
-        </motion.p>
+          <span className="px-3 py-1 rounded-full bg-[#FF9900]/10 border border-[#FF9900]/20 text-[#FF9900] text-xs font-mono">
+            AWS SAA-C03
+          </span>
+          <span className="px-3 py-1 rounded-full bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff] text-xs font-mono">
+            5+ Years
+          </span>
+          <span className="px-3 py-1 rounded-full bg-[#7c3aed]/10 border border-[#7c3aed]/20 text-[#7c3aed] text-xs font-mono">
+            Cloud · DevOps · IaC
+          </span>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -98,16 +137,16 @@ export default function Hero() {
         >
           <a
             href={`mailto:${personalInfo.email}`}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#00d4ff] text-black font-semibold hover:bg-[#00bfea] transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#00d4ff] text-black font-bold hover:bg-[#00bfea] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,212,255,0.4)]"
           >
             <Mail size={16} />
-            Get in Touch
+            Hire Me
           </a>
           <a
             href={personalInfo.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1e1e2e] border border-white/10 text-white font-semibold hover:border-[#00d4ff]/40 transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-transparent border border-white/15 text-white font-semibold hover:border-[#00d4ff]/50 hover:bg-white/5 transition-all duration-200 hover:scale-105"
           >
             <GitBranch size={16} />
             GitHub
@@ -116,16 +155,26 @@ export default function Hero() {
             href={personalInfo.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1e1e2e] border border-white/10 text-white font-semibold hover:border-[#00d4ff]/40 transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-transparent border border-white/15 text-white font-semibold hover:border-[#0ea5e9]/50 hover:bg-white/5 transition-all duration-200 hover:scale-105"
           >
             <ExternalLink size={16} />
             LinkedIn
           </a>
         </motion.div>
+
+        {/* Scroll hint */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="mt-16 text-slate-600 text-xs font-mono tracking-widest uppercase"
+        >
+          scroll to explore the journey
+        </motion.p>
       </div>
 
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-500"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-600"
         animate={{ y: [0, 8, 0] }}
         transition={{ repeat: Infinity, duration: 2 }}
       >

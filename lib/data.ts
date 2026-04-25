@@ -7,7 +7,7 @@ export const personalInfo = {
   email: "Harshdixit23mar@gmail.com",
   phone: "+91 8949827264",
   location: "India",
-  github: "https://github.com/harshdixit",
+  github: "https://github.com/harsh785",
   linkedin: "https://linkedin.com/in/harshdixit",
 };
 

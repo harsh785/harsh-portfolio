@@ -113,7 +113,6 @@ function makeWheel(mirrorX=false) {
 function makeTree(x:number,z:number,scale=1.0,type=0) {
   const g=new THREE.Group();
   const trunkH=(0.6+Math.random()*0.5)*scale;
-  g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.09*scale,0.14*scale,trunkH,7),flat(C.trunk)),{position:{y:trunkH/2,set(){}}}) );
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.09*scale,0.14*scale,trunkH,7),flat(C.trunk));
   trunk.position.y=trunkH/2; trunk.castShadow=true; g.add(trunk);
   if(type===0){
@@ -165,7 +164,6 @@ function makeHouse(x:number,z:number,ry=0) {
 
 function makeLamp(x:number,z:number) {
   const g=new THREE.Group();
-  g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.15,0.25,8),flat(0x707070)),{}));
   const base=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.15,0.25,8),flat(0x707070)); base.position.y=0.12; g.add(base);
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.06,4.8,7),flat(0x888888)); pole.position.y=2.65; pole.castShadow=true; g.add(pole);
   const arm=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.90),flat(0x888888)); arm.position.set(0.45,5.1,0); g.add(arm);
@@ -480,7 +478,6 @@ export default function CyberCarGame() {
 
     // Pond
     const pond=new THREE.Mesh(new THREE.CircleGeometry(6,18),flat(C.water)); pond.rotation.x=-Math.PI/2; pond.position.set(18,.07,18); scene.add(pond);
-    scene.add(Object.assign(new THREE.Mesh(new THREE.TorusGeometry(6,.22,6,20),flat(C.waterEdge)),{rotation:{x:Math.PI/2},position:{set(){},y:.09,x:18,z:18}}));
     const pr=new THREE.Mesh(new THREE.TorusGeometry(6,.22,6,20),flat(C.waterEdge)); pr.rotation.x=Math.PI/2; pr.position.set(18,.09,18); scene.add(pr);
     const shore=new THREE.Mesh(new THREE.CircleGeometry(7.5,18),flat(C.sand)); shore.rotation.x=-Math.PI/2; shore.position.set(18,.03,18); scene.add(shore);
 

@@ -40,7 +40,7 @@ function MiniTerminal({ commands, color }: { commands: SkillWorld["terminalComma
 
   return (
     <div className="rounded-xl overflow-hidden border border-white/10">
-      <div className="bg-[#1a1a2e] px-4 py-2 flex items-center gap-2">
+      <div className="bg-[#181825] px-4 py-2 flex items-center gap-2">
         <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
         <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
         <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
@@ -52,7 +52,7 @@ function MiniTerminal({ commands, color }: { commands: SkillWorld["terminalComma
           replay ↺
         </button>
       </div>
-      <div className="bg-[#0d0d1a] p-4 font-mono text-sm min-h-[180px] space-y-2">
+      <div className="bg-[#0d0d14] p-4 font-mono text-sm min-h-[180px] space-y-2">
         {commands.slice(0, step).map((c, i) => (
           <div key={i}>
             <div style={{ color }}>$ {c.cmd}</div>

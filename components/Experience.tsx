@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Calendar, ChevronRight, Briefcase } from "lucide-react";
 import { experiences } from "@/lib/data";
 
-const companyColors = ["#00d4ff", "#7c3aed", "#10b981", "#f59e0b", "#f43f5e"];
+const companyColors = ["#89dceb", "#cba6f7", "#10b981", "#f59e0b", "#f43f5e"];
 
 export default function Experience() {
   const [active, setActive] = useState(0);
@@ -19,7 +19,7 @@ export default function Experience() {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
+          <div className="inline-flex items-center gap-2 text-[#89dceb] text-sm font-mono mb-3">
             <Briefcase size={14} />
             <span>journey.log</span>
           </div>

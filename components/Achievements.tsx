@@ -30,8 +30,8 @@ function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?
 // ── Rarity config ─────────────────────────────────────────────────────────────
 const rarityConfig: Record<string, { color: string; bg: string; stars: number }> = {
   LEGENDARY: { color: "#FF9900", bg: "#FF990015", stars: 3 },
-  EPIC:      { color: "#7c3aed", bg: "#7c3aed15", stars: 2 },
-  RARE:      { color: "#00d4ff", bg: "#00d4ff10", stars: 1 },
+  EPIC:      { color: "#cba6f7", bg: "#cba6f715", stars: 2 },
+  RARE:      { color: "#89dceb", bg: "#89dceb10", stars: 1 },
 };
 
 // ── Achievement card ──────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ function CertCard() {
       >
         {/* Front */}
         <div className="absolute inset-0 rounded-2xl p-5 flex flex-col justify-between border"
-          style={{ backfaceVisibility: "hidden", background: "linear-gradient(135deg,#1a1000,#0a0a0f)", borderColor: "#FF990030" }}>
+          style={{ backfaceVisibility: "hidden", background: "linear-gradient(135deg,#1a1000,#0d0d14)", borderColor: "#FF990030" }}>
           <div className="flex justify-between items-start">
             <span className="text-4xl">☁️</span>
             <span className="text-xs font-mono px-2 py-1 rounded-lg border" style={{ color: "#FF9900", borderColor: "#FF990030", background: "#FF990010" }}>CERTIFIED</span>
@@ -148,7 +148,7 @@ function CertCard() {
         </div>
         {/* Back */}
         <div className="absolute inset-0 rounded-2xl p-5 flex flex-col justify-between border"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(135deg,#1a1000,#0a0a0f)", borderColor: "#FF990030" }}>
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(135deg,#1a1000,#0d0d14)", borderColor: "#FF990030" }}>
           <p className="text-xs text-slate-500 uppercase tracking-wider">What this certifies</p>
           <ul className="space-y-2">
             {["Design resilient, HA AWS architectures", "Choose the right service for cost & perf", "Security best practices across AWS", "Networking — VPC, Route53, CloudFront"].map(item => (
@@ -167,13 +167,13 @@ function CertCard() {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Achievements() {
   return (
-    <section id="achievements" className="py-24 px-6 bg-[#0a0a0f]">
+    <section id="achievements" className="py-24 px-6 bg-[#0d0d14]">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="mb-16 text-center">
-          <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
+          <div className="inline-flex items-center gap-2 text-[#89dceb] text-sm font-mono mb-3">
             <Trophy size={14} /><span>trophy_room.exe</span>
           </div>
           <h2 className="text-4xl font-bold text-white">Trophy Room</h2>
@@ -227,14 +227,14 @@ export default function Achievements() {
             <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-4">Education</p>
             <TiltCard intensity={8}>
               <div className="rounded-2xl p-5 border h-52 flex flex-col justify-between"
-                style={{ background: "#7c3aed08", borderColor: "#7c3aed20" }}>
-                <div className="w-10 h-10 rounded-xl bg-[#7c3aed]/10 border border-[#7c3aed]/20 flex items-center justify-center">
-                  <GraduationCap size={18} className="text-[#7c3aed]" />
+                style={{ background: "#cba6f708", borderColor: "#cba6f720" }}>
+                <div className="w-10 h-10 rounded-xl bg-[#cba6f7]/10 border border-[#cba6f7]/20 flex items-center justify-center">
+                  <GraduationCap size={18} className="text-[#cba6f7]" />
                 </div>
                 <div>
                   <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Degree</p>
                   <h4 className="text-white font-bold text-sm leading-snug">{education.degree}</h4>
-                  <p className="text-[#7c3aed] text-xs font-medium mt-1">{education.institution}</p>
+                  <p className="text-[#cba6f7] text-xs font-medium mt-1">{education.institution}</p>
                   <p className="text-slate-600 text-xs mt-0.5">{education.year}</p>
                 </div>
               </div>
@@ -246,12 +246,12 @@ export default function Achievements() {
             <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-4">Passive Perks</p>
             <TiltCard intensity={8}>
               <div className="rounded-2xl p-5 border h-52 flex flex-col justify-between"
-                style={{ background: "#00d4ff05", borderColor: "#00d4ff12" }}>
+                style={{ background: "#89dceb05", borderColor: "#89dceb12" }}>
                 <p className="text-xs text-slate-500">Soft skills that ship with the engineer</p>
                 <div className="flex flex-wrap gap-2">
                   {["Problem Solving", "Continuous Learning", "Collaboration", "Communication", "Curiosity", "Team Player"].map(skill => (
                     <span key={skill} className="px-2.5 py-1 rounded-full text-xs border font-medium"
-                      style={{ color: "#00d4ff90", borderColor: "#00d4ff18", background: "#00d4ff08" }}>
+                      style={{ color: "#89dceb90", borderColor: "#89dceb18", background: "#89dceb08" }}>
                       +{skill}
                     </span>
                   ))}

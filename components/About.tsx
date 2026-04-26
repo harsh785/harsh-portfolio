@@ -15,7 +15,7 @@ function CineLine({ text, color, delay }: { text: string; color?: "neon" | "whit
         animate={inView ? { y: 0 } : {}}
         transition={{ duration: 0.75, delay, ease: [0.16, 1, 0.3, 1] }}
         className="block text-4xl md:text-5xl font-black leading-tight tracking-tight"
-        style={color === "neon" ? { color: "#39ff14", textShadow: "0 0 30px #39ff1460" } : { color: "#fff" }}
+        style={color === "neon" ? { color: "#a6e3a1", textShadow: "0 0 30px #a6e3a160" } : { color: "#fff" }}
       >
         {text}
       </motion.span>
@@ -27,12 +27,12 @@ function CineLine({ text, color, delay }: { text: string; color?: "neon" | "whit
 const configLines = [
   { text: 'name:       "Harsh Dixit"',          color: "#e2e8f0" },
   { text: 'role:       "Senior Cloud Engineer"', color: "#e2e8f0" },
-  { text: 'company:    "Caylent"',               color: "#39ff14" },
+  { text: 'company:    "Caylent"',               color: "#a6e3a1" },
   { text: 'location:   "India (Remote)"',        color: "#e2e8f0" },
-  { text: 'experience: "5+ years"',              color: "#00d4ff" },
+  { text: 'experience: "5+ years"',              color: "#89dceb" },
   { text: 'certified:  "AWS SAA-C03"',           color: "#FF9900" },
-  { text: 'stack:      ["AWS","K8s","TF","Docker"]', color: "#7c3aed" },
-  { text: 'available:  true',                    color: "#39ff14" },
+  { text: 'stack:      ["AWS","K8s","TF","Docker"]', color: "#cba6f7" },
+  { text: 'available:  true',                    color: "#a6e3a1" },
 ];
 
 function BentoTerminal() {
@@ -75,7 +75,7 @@ function BentoTerminal() {
           </motion.div>
         ))}
         {visibleCount >= configLines.length && (
-          <span className="inline-block w-1.5 h-3.5 bg-[#00d4ff] animate-pulse ml-0.5 align-middle" />
+          <span className="inline-block w-1.5 h-3.5 bg-[#89dceb] animate-pulse ml-0.5 align-middle" />
         )}
       </div>
     </div>
@@ -112,7 +112,7 @@ export default function About() {
   const sectionRef = useRef(null);
 
   return (
-    <section id="about" ref={sectionRef} className="relative py-24 px-6 bg-[#0a0a0f] overflow-hidden">
+    <section id="about" ref={sectionRef} className="relative py-24 px-6 bg-[#0d0d14] overflow-hidden">
       {/* Bg glow */}
       <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none"
         style={{ background: "rgba(0,212,255,0.04)", transform: "translate(-50%,-50%)" }} />
@@ -144,7 +144,7 @@ export default function About() {
 
           {/* ── Status card — top right ── */}
           <div className="col-span-6 lg:col-span-2 row-span-1">
-            <BentoCard delay={0.15} style={{ background: "#39ff1408", borderColor: "#39ff1420" }}>
+            <BentoCard delay={0.15} style={{ background: "#a6e3a108", borderColor: "#a6e3a120" }}>
               <div className="flex items-center gap-1.5 mb-3">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <span className="text-xs text-green-400 font-mono">Available</span>
@@ -156,8 +156,8 @@ export default function About() {
 
           {/* ── Location card ── */}
           <div className="col-span-6 lg:col-span-3 row-span-1">
-            <BentoCard delay={0.2} style={{ background: "#7c3aed08", borderColor: "#7c3aed20" }}>
-              <MapPin size={16} className="text-[#7c3aed] mb-3" />
+            <BentoCard delay={0.2} style={{ background: "#cba6f708", borderColor: "#cba6f720" }}>
+              <MapPin size={16} className="text-[#cba6f7] mb-3" />
               <p className="text-white font-bold text-sm">India</p>
               <p className="text-slate-500 text-xs mt-0.5">Remote-first · IST</p>
               <p className="text-slate-600 text-xs mt-2 font-mono">@ Caylent · US client</p>
@@ -187,19 +187,19 @@ export default function About() {
 
           {/* ── Experience badge ── */}
           <div className="col-span-6 lg:col-span-3">
-            <BentoCard delay={0.35} style={{ background: "#00d4ff06", borderColor: "#00d4ff15" }}>
-              <Zap size={16} className="text-[#00d4ff] mb-3" />
+            <BentoCard delay={0.35} style={{ background: "#89dceb06", borderColor: "#89dceb15" }}>
+              <Zap size={16} className="text-[#89dceb] mb-3" />
               <p className="text-3xl font-black text-white">5+</p>
-              <p className="text-[#00d4ff] text-sm font-semibold">Years</p>
+              <p className="text-[#89dceb] text-sm font-semibold">Years</p>
               <p className="text-slate-500 text-xs mt-1">4 companies · 50+ pipelines</p>
             </BentoCard>
           </div>
 
           {/* ── 4 trait cards, full width row ── */}
           {[
-            { emoji: "☁️", label: "Cloud Architect",         desc: "Designs AWS infra that scales", color: "#00d4ff" },
-            { emoji: "🔧", label: "Automation Obsessed",     desc: "If it runs twice, it gets a pipeline", color: "#7c3aed" },
-            { emoji: "🛡️", label: "Security-first",          desc: "CIS, FSBP, SOC2 by default", color: "#39ff14" },
+            { emoji: "☁️", label: "Cloud Architect",         desc: "Designs AWS infra that scales", color: "#89dceb" },
+            { emoji: "🔧", label: "Automation Obsessed",     desc: "If it runs twice, it gets a pipeline", color: "#cba6f7" },
+            { emoji: "🛡️", label: "Security-first",          desc: "CIS, FSBP, SOC2 by default", color: "#a6e3a1" },
             { emoji: "📊", label: "Observability Nerd",      desc: "Prometheus, Grafana, ELK always on", color: "#f59e0b" },
           ].map((t, i) => (
             <div key={t.label} className="col-span-6 lg:col-span-3">

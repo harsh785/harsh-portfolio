@@ -97,7 +97,7 @@ export default function Skills() {
           viewport={{ once: true }}
           className="mb-12 text-center"
         >
-          <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
+          <div className="inline-flex items-center gap-2 text-[#89dceb] text-sm font-mono mb-3">
             <Code2 size={14} />
             <span>skills.universe</span>
           </div>
@@ -119,7 +119,7 @@ export default function Skills() {
               className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
               style={
                 filter === cat
-                  ? { background: "#00d4ff", color: "#000", borderColor: "#00d4ff" }
+                  ? { background: "#89dceb", color: "#000", borderColor: "#89dceb" }
                   : { background: "transparent", color: "#64748b", borderColor: "rgba(255,255,255,0.08)" }
               }
             >

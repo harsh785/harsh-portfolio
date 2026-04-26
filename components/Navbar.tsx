@@ -35,15 +35,15 @@ export default function Navbar() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-[#0a0a0f]/90 backdrop-blur-md border-b border-[#00d4ff]/10"
+            ? "bg-[#0d0d14]/90 backdrop-blur-md border-b border-[#89dceb]/10"
             : "bg-transparent"
         }`}
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button onClick={() => scrollTo("hero")} className="font-bold text-lg tracking-tight">
-            <span className="text-[#00d4ff]">&lt;</span>
+            <span className="text-[#89dceb]">&lt;</span>
             <span className="text-white">HD</span>
-            <span className="text-[#00d4ff]">/&gt;</span>
+            <span className="text-[#89dceb]">/&gt;</span>
           </button>
 
           <div className="hidden md:flex items-center gap-8">
@@ -51,7 +51,7 @@ export default function Navbar() {
               <button
                 key={link}
                 onClick={() => scrollTo(link)}
-                className="text-sm text-slate-400 hover:text-[#00d4ff] transition-colors duration-200 font-medium"
+                className="text-sm text-slate-400 hover:text-[#89dceb] transition-colors duration-200 font-medium"
               >
                 {link}
               </button>
@@ -66,14 +66,14 @@ export default function Navbar() {
             <a
               href="/resume.pdf"
               target="_blank"
-              className="text-sm px-4 py-2 rounded-lg border border-[#00d4ff]/40 text-[#00d4ff] hover:bg-[#00d4ff]/10 transition-all duration-200 font-medium"
+              className="text-sm px-4 py-2 rounded-lg border border-[#89dceb]/40 text-[#89dceb] hover:bg-[#89dceb]/10 transition-all duration-200 font-medium"
             >
               Resume
             </a>
           </div>
 
           <button
-            className="md:hidden text-slate-400 hover:text-[#00d4ff]"
+            className="md:hidden text-slate-400 hover:text-[#89dceb]"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -87,13 +87,13 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-md flex flex-col items-center justify-center gap-8"
+            className="fixed inset-0 z-40 bg-[#0d0d14]/95 backdrop-blur-md flex flex-col items-center justify-center gap-8"
           >
             {links.map((link) => (
               <button
                 key={link}
                 onClick={() => scrollTo(link)}
-                className="text-2xl font-semibold text-slate-300 hover:text-[#00d4ff] transition-colors"
+                className="text-2xl font-semibold text-slate-300 hover:text-[#89dceb] transition-colors"
               >
                 {link}
               </button>
@@ -115,7 +115,7 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-[#0a0a0f]"
+            className="fixed inset-0 z-[60] bg-[#0d0d14]"
           >
             <button
               onClick={() => setGameOpen(false)}

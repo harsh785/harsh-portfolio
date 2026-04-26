@@ -63,9 +63,9 @@ function TypewriterRoles() {
   }, [displayed, deleting, idx]);
 
   return (
-    <span className="text-[#00d4ff]">
+    <span className="text-[#89dceb]">
       {displayed}
-      <span className="animate-pulse">|</span>
+      <span className="animate-pulse">_</span>
     </span>
   );
 }
@@ -79,8 +79,8 @@ export default function Hero() {
       </Suspense>
 
       {/* Radial glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#00d4ff]/4 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#7c3aed]/6 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#89dceb]/4 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#cba6f7]/6 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
         {/* Status badge */}
@@ -88,7 +88,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e1e2e]/80 border border-[#00d4ff]/20 text-sm font-mono mb-8 backdrop-blur-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e1e2e]/80 border border-[#89dceb]/20 text-sm font-mono mb-8 backdrop-blur-sm"
         >
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           <span className="text-green-400 font-medium">Available for opportunities</span>
@@ -99,7 +99,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
         >
-          <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tight leading-none">
+          <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tight leading-none cursor-blink">
             <span className="text-white">Harsh </span>
             <span className="neon-green-text">
               <GlitchText text="Dixit" />
@@ -125,10 +125,10 @@ export default function Hero() {
           <span className="px-3 py-1 rounded-full bg-[#FF9900]/10 border border-[#FF9900]/20 text-[#FF9900] text-xs font-mono">
             AWS SAA-C03
           </span>
-          <span className="px-3 py-1 rounded-full bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff] text-xs font-mono">
+          <span className="px-3 py-1 rounded-full bg-[#89dceb]/10 border border-[#89dceb]/20 text-[#89dceb] text-xs font-mono">
             5+ Years
           </span>
-          <span className="px-3 py-1 rounded-full bg-[#7c3aed]/10 border border-[#7c3aed]/20 text-[#7c3aed] text-xs font-mono">
+          <span className="px-3 py-1 rounded-full bg-[#cba6f7]/10 border border-[#cba6f7]/20 text-[#cba6f7] text-xs font-mono">
             Cloud · DevOps · IaC
           </span>
         </motion.div>
@@ -141,7 +141,7 @@ export default function Hero() {
         >
           <a
             href={`mailto:${personalInfo.email}`}
-            className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#00d4ff] text-black font-bold hover:bg-[#00bfea] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,212,255,0.4)]"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#89dceb] text-black font-bold hover:bg-[#00bfea] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,212,255,0.4)]"
           >
             <Mail size={16} />
             Hire Me
@@ -150,7 +150,7 @@ export default function Hero() {
             href={personalInfo.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-transparent border border-white/15 text-white font-semibold hover:border-[#00d4ff]/50 hover:bg-white/5 transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-transparent border border-white/15 text-white font-semibold hover:border-[#89dceb]/50 hover:bg-white/5 transition-all duration-200 hover:scale-105"
           >
             <GitBranch size={16} />
             GitHub

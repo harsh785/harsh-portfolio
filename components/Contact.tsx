@@ -5,8 +5,8 @@ import { Mail, Phone, GitBranch, ExternalLink, Send, Check } from "lucide-react"
 import { personalInfo } from "@/lib/data";
 
 const cards = [
-  { icon: Mail,         label: "Email",     value: personalInfo.email,            href: `mailto:${personalInfo.email}`, color: "#00d4ff", emoji: "📧" },
-  { icon: Phone,        label: "Phone",     value: personalInfo.phone,            href: `tel:${personalInfo.phone}`,    color: "#7c3aed", emoji: "📱" },
+  { icon: Mail,         label: "Email",     value: personalInfo.email,            href: `mailto:${personalInfo.email}`, color: "#89dceb", emoji: "📧" },
+  { icon: Phone,        label: "Phone",     value: personalInfo.phone,            href: `tel:${personalInfo.phone}`,    color: "#cba6f7", emoji: "📱" },
   { icon: GitBranch,    label: "GitHub",    value: "github.com/harsh785",         href: personalInfo.github,            color: "#f59e0b", emoji: "💻" },
   { icon: ExternalLink, label: "LinkedIn",  value: "harsh-dixit-156a371b0",       href: personalInfo.linkedin,          color: "#0ea5e9", emoji: "🔗" },
   { icon: Send,         label: "Available", value: "Open to opportunities",       href: `mailto:${personalInfo.email}`, color: "#39ff14", emoji: "🚀" },
@@ -216,7 +216,7 @@ export default function Contact() {
   }, [handleMouseMove]);
 
   return (
-    <section id="contact" className="py-24 px-6 bg-[#0a0a0f] overflow-hidden">
+    <section id="contact" className="py-24 px-6 bg-[#0d0d14] overflow-hidden">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -225,7 +225,7 @@ export default function Contact() {
           viewport={{ once: true }}
           className="mb-4 text-center"
         >
-          <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
+          <div className="inline-flex items-center gap-2 text-[#89dceb] text-sm font-mono mb-3">
             <Send size={14} />
             <span>contact.magnetic</span>
           </div>
@@ -276,7 +276,7 @@ export default function Contact() {
           <a
             href={`mailto:${personalInfo.email}`}
             className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-black text-sm transition-all hover:scale-105"
-            style={{ background: "#00d4ff", boxShadow: "0 0 24px #00d4ff30" }}
+            style={{ background: "#89dceb", boxShadow: "0 0 24px #89dceb30" }}
           >
             <Mail size={15} /> Send a Message
           </a>

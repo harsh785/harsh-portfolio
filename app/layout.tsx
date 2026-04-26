@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Harsh Dixit — Senior Cloud & DevOps Engineer",
   description:
-    "AWS SAA-C03 Certified Senior Cloud Engineer with 4+ years of expertise in cloud infrastructure, Terraform, Kubernetes, CI/CD, and DevOps automation.",
+    "AWS SAA-C03 Certified Senior Cloud Engineer with 5+ years of expertise in cloud infrastructure, Terraform, Kubernetes, CI/CD, and DevOps automation.",
   keywords: ["DevOps", "Cloud Engineer", "AWS", "Terraform", "Kubernetes", "Harsh Dixit"],
 };
 
@@ -17,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.className} h-full`} style={{ colorScheme: "dark" }}>
-      <body className="min-h-full antialiased bg-[#0a0a0f] text-slate-200">
+    <html lang="en" className={`${jetbrainsMono.variable} h-full`} style={{ colorScheme: "dark" }}>
+      <body className={`min-h-full antialiased bg-[#0d0d14] text-slate-200 ${jetbrainsMono.className}`}>
         {children}
       </body>
     </html>

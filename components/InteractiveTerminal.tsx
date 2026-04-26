@@ -3,88 +3,107 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { motion } from "framer-motion";
 import { Terminal } from "lucide-react";
 
-type Line = { type: "input" | "output" | "error" | "blank"; content: string };
+type TokenType = "prompt" | "cmd" | "key" | "val" | "comment" | "string" | "error" | "success" | "number" | "path" | "blank";
+type Segment = { text: string; tok: TokenType };
+type Line = Segment[];
+
+function mkLine(...segments: [string, TokenType][]): Line {
+  return segments.map(([text, tok]) => ({ text, tok }));
+}
 
 const COMMANDS: Record<string, () => Line[]> = {
   help: () => [
-    { type: "output", content: "Available commands:" },
-    { type: "output", content: "  whoami          — About me" },
-    { type: "output", content: "  ls skills        — List my skills" },
-    { type: "output", content: "  cat experience   — Work history" },
-    { type: "output", content: "  cat certs        — Certifications" },
-    { type: "output", content: "  contact          — Get in touch" },
-    { type: "output", content: "  clear            — Clear terminal" },
-    { type: "blank", content: "" },
+    mkLine(["# Available commands", "comment"]),
+    mkLine(["  whoami         ", "key"], ["—", "comment"], [" about me", "val"]),
+    mkLine(["  ls skills      ", "key"], ["—", "comment"], [" list my skills", "val"]),
+    mkLine(["  cat experience ", "key"], ["—", "comment"], [" work history", "val"]),
+    mkLine(["  cat certs      ", "key"], ["—", "comment"], [" certifications", "val"]),
+    mkLine(["  contact        ", "key"], ["—", "comment"], [" get in touch", "val"]),
+    mkLine(["  clear          ", "key"], ["—", "comment"], [" clear screen", "val"]),
+    mkLine(["", "blank"]),
   ],
   whoami: () => [
-    { type: "output", content: "Harsh Dixit" },
-    { type: "output", content: "Senior Cloud & DevOps Engineer" },
-    { type: "output", content: "AWS SAA-C03 Certified | 5+ Years Experience" },
-    { type: "output", content: "Location: India (Remote-first)" },
-    { type: "blank", content: "" },
-    { type: "output", content: "Currently @ Caylent — building cloud infra for enterprise clients." },
-    { type: "blank", content: "" },
+    mkLine(["Harsh Dixit", "success"]),
+    mkLine(["Senior Cloud & DevOps Engineer", "val"]),
+    mkLine(["AWS SAA-C03", "string"], ["  |  ", "comment"], ["5+ Years", "number"], ["  |  ", "comment"], ["India (Remote)", "path"]),
+    mkLine(["", "blank"]),
+    mkLine(["Currently @ ", "comment"], ["Caylent", "cmd"], [" — building cloud infra for enterprise clients.", "val"]),
+    mkLine(["", "blank"]),
   ],
   "ls skills": () => [
-    { type: "output", content: "cloud/          terraform/      kubernetes/" },
-    { type: "output", content: "docker/         github-actions/ jenkins/" },
-    { type: "output", content: "prometheus/     grafana/        elk-stack/" },
-    { type: "output", content: "mysql/          postgresql/     dynamodb/" },
-    { type: "output", content: "nginx/          ansible/        sentry/" },
-    { type: "blank", content: "" },
+    mkLine(["drwxr-xr-x  ", "comment"], ["cloud/         ", "path"], ["terraform/     ", "path"], ["kubernetes/", "path"]),
+    mkLine(["drwxr-xr-x  ", "comment"], ["docker/        ", "path"], ["github-actions/", "path"], ["jenkins/", "path"]),
+    mkLine(["drwxr-xr-x  ", "comment"], ["prometheus/    ", "path"], ["grafana/       ", "path"], ["elk-stack/", "path"]),
+    mkLine(["drwxr-xr-x  ", "comment"], ["mysql/         ", "path"], ["postgresql/    ", "path"], ["dynamodb/", "path"]),
+    mkLine(["drwxr-xr-x  ", "comment"], ["nginx/         ", "path"], ["ansible/       ", "path"], ["sentry/", "path"]),
+    mkLine(["", "blank"]),
   ],
   "cat experience": () => [
-    { type: "output", content: "┌─ Caylent              [Dec 2025 – Present]" },
-    { type: "output", content: "│  Senior Cloud Engineer · Remote" },
-    { type: "output", content: "│  EKS, Lambda, Neo4j, SOC2, GitHub Actions" },
-    { type: "blank", content: "" },
-    { type: "output", content: "├─ Hudle                [Nov 2024 – Dec 2025]" },
-    { type: "output", content: "│  Senior DevOps Engineer · On-site" },
-    { type: "output", content: "│  Sole DevOps — full lifecycle ownership" },
-    { type: "blank", content: "" },
-    { type: "output", content: "├─ Squareboat           [Jul 2022 – Jul 2024]" },
-    { type: "output", content: "│  DevOps → Senior DevOps Engineer" },
-    { type: "output", content: "│  AWS, Terraform, K8s, ELK stack" },
-    { type: "blank", content: "" },
-    { type: "output", content: "└─ I2K2 Networks        [Mar 2021 – Jun 2022]" },
-    { type: "output", content: "   Cloud Solutions Engineer" },
-    { type: "output", content: "   AWS, Nginx, Apache, Docker, Terraform" },
-    { type: "blank", content: "" },
+    mkLine(["┌─ ", "comment"], ["Caylent", "success"], ["              [", "comment"], ["Dec 2025 – Present", "string"], ["]", "comment"]),
+    mkLine(["│  ", "comment"], ["role:     ", "key"], ["Senior Cloud Engineer · Remote", "val"]),
+    mkLine(["│  ", "comment"], ["stack:    ", "key"], ["EKS, Lambda, Neo4j, SOC2, GitHub Actions", "string"]),
+    mkLine(["", "blank"]),
+    mkLine(["├─ ", "comment"], ["Hudle", "cmd"], ["                [", "comment"], ["Nov 2024 – Dec 2025", "string"], ["]", "comment"]),
+    mkLine(["│  ", "comment"], ["role:     ", "key"], ["Senior DevOps Engineer · On-site", "val"]),
+    mkLine(["│  ", "comment"], ["note:     ", "key"], ["Sole DevOps — full lifecycle ownership", "string"]),
+    mkLine(["", "blank"]),
+    mkLine(["├─ ", "comment"], ["Squareboat", "cmd"], ["           [", "comment"], ["Jul 2022 – Jul 2024", "string"], ["]", "comment"]),
+    mkLine(["│  ", "comment"], ["role:     ", "key"], ["DevOps → Senior DevOps Engineer", "val"]),
+    mkLine(["│  ", "comment"], ["stack:    ", "key"], ["AWS, Terraform, K8s, ELK", "string"]),
+    mkLine(["", "blank"]),
+    mkLine(["└─ ", "comment"], ["I2K2 Networks", "cmd"], ["        [", "comment"], ["Mar 2021 – Jun 2022", "string"], ["]", "comment"]),
+    mkLine(["   ", "comment"], ["role:     ", "key"], ["Cloud Solutions Engineer", "val"]),
+    mkLine(["   ", "comment"], ["stack:    ", "key"], ["AWS, Nginx, Apache, Docker, Terraform", "string"]),
+    mkLine(["", "blank"]),
   ],
   "cat certs": () => [
-    { type: "output", content: "┌──────────────────────────────────────────┐" },
-    { type: "output", content: "│  AWS Solutions Architect Associate        │" },
-    { type: "output", content: "│  Exam Code: SAA-C03                       │" },
-    { type: "output", content: "│  Issuer: Amazon Web Services              │" },
-    { type: "output", content: "│  Status: ✓ CERTIFIED                      │" },
-    { type: "output", content: "└──────────────────────────────────────────┘" },
-    { type: "blank", content: "" },
+    mkLine(["┌──────────────────────────────────────────┐", "comment"]),
+    mkLine(["│  ", "comment"], ["name:   ", "key"], ["AWS Solutions Architect Associate   ", "val"], ["│", "comment"]),
+    mkLine(["│  ", "comment"], ["code:   ", "key"], ["SAA-C03                            ", "string"], ["│", "comment"]),
+    mkLine(["│  ", "comment"], ["issuer: ", "key"], ["Amazon Web Services                ", "val"], ["│", "comment"]),
+    mkLine(["│  ", "comment"], ["status: ", "key"], ["✓ CERTIFIED                        ", "success"], ["│", "comment"]),
+    mkLine(["└──────────────────────────────────────────┘", "comment"]),
+    mkLine(["", "blank"]),
   ],
   contact: () => [
-    { type: "output", content: "Email:    Harshdixit23mar@gmail.com" },
-    { type: "output", content: "GitHub:   github.com/harsh785" },
-    { type: "output", content: "LinkedIn: linkedin.com/in/harsh-dixit-156a371b0" },
-    { type: "blank", content: "" },
+    mkLine(["email:    ", "key"], ["Harshdixit23mar@gmail.com", "string"]),
+    mkLine(["github:   ", "key"], ["github.com/harsh785", "path"]),
+    mkLine(["linkedin: ", "key"], ["linkedin.com/in/harsh-dixit-156a371b0", "path"]),
+    mkLine(["", "blank"]),
   ],
   pwd: () => [
-    { type: "output", content: "/home/harsh/cloud/career" },
-    { type: "blank", content: "" },
+    mkLine(["/home/harsh/cloud/career", "path"]),
+    mkLine(["", "blank"]),
   ],
   sudo: () => [
-    { type: "error", content: "harsh is not in the sudoers file. Nice try." },
-    { type: "blank", content: "" },
+    mkLine(["harsh is not in the sudoers file. Nice try.", "error"]),
+    mkLine(["", "blank"]),
   ],
   exit: () => [
-    { type: "output", content: "Not so fast. There's more to explore. 😄" },
-    { type: "blank", content: "" },
+    mkLine(["Not so fast. There's more to explore. 😄", "val"]),
+    mkLine(["", "blank"]),
   ],
   ls: () => COMMANDS["ls skills"](),
 };
 
+const tokClass: Record<TokenType, string> = {
+  prompt:  "tok-prompt",
+  cmd:     "tok-cmd",
+  key:     "tok-key",
+  val:     "tok-val",
+  comment: "tok-comment",
+  string:  "tok-string",
+  error:   "tok-error",
+  success: "tok-success",
+  number:  "tok-number",
+  path:    "tok-path",
+  blank:   "",
+};
+
 const INITIAL: Line[] = [
-  { type: "output", content: "Welcome to harsh@devops:~$ — Interactive Terminal" },
-  { type: "output", content: 'Type "help" to see available commands.' },
-  { type: "blank", content: "" },
+  mkLine(["# Welcome to harsh@devops:~$", "comment"]),
+  mkLine(["# Type ", "comment"], ["help", "cmd"], [" to see available commands.", "comment"]),
+  mkLine(["", "blank"]),
 ];
 
 export default function InteractiveTerminal() {
@@ -101,19 +120,16 @@ export default function InteractiveTerminal() {
 
   const run = (cmd: string) => {
     const trimmed = cmd.trim().toLowerCase();
-    const inputLine: Line = { type: "input", content: `$ ${cmd}` };
+    const inputLine: Line = mkLine(["$ ", "prompt"], [cmd, "cmd"]);
 
-    if (trimmed === "clear") {
-      setHistory(INITIAL);
-      return;
-    }
+    if (trimmed === "clear") { setHistory(INITIAL); return; }
 
     const handler = COMMANDS[trimmed];
     const output: Line[] = handler
       ? handler()
       : [
-          { type: "error", content: `Command not found: ${cmd}. Type "help" for commands.` },
-          { type: "blank", content: "" },
+          mkLine(["bash: ", "error"], [cmd, "cmd"], [": command not found. Type ", "val"], ["help", "cmd"], [" for commands.", "val"]),
+          mkLine(["", "blank"]),
         ];
 
     setHistory((prev) => [...prev, inputLine, ...output]);
@@ -139,7 +155,7 @@ export default function InteractiveTerminal() {
   };
 
   return (
-    <section className="py-24 px-6 bg-[#0a0a0f]">
+    <section className="py-24 px-6 bg-[#0d0d14]">
       <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -147,12 +163,12 @@ export default function InteractiveTerminal() {
           viewport={{ once: true }}
           className="mb-8 text-center"
         >
-          <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
+          <div className="inline-flex items-center gap-2 text-[#89dceb] text-sm font-mono mb-3">
             <Terminal size={14} />
             <span>try_me.sh</span>
           </div>
-          <h2 className="text-4xl font-bold text-white">Explore Me Interactively</h2>
-          <p className="text-slate-400 mt-2">A real terminal. Type commands and discover.</p>
+          <h2 className="text-4xl font-bold text-white cursor-blink">Explore Me Interactively</h2>
+          <p className="text-slate-500 mt-2 font-mono text-sm">A real terminal. Type commands and discover.</p>
         </motion.div>
 
         <motion.div
@@ -161,47 +177,43 @@ export default function InteractiveTerminal() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
           onClick={() => inputRef.current?.focus()}
-          className="cursor-text"
+          className="cursor-text rounded-xl overflow-hidden shadow-2xl"
+          style={{ boxShadow: "0 0 60px rgba(137,220,235,0.07), 0 25px 50px rgba(0,0,0,0.6)" }}
         >
-          {/* Chrome */}
-          <div className="bg-[#1a1a2e] rounded-t-xl border border-[#00d4ff]/15 px-4 py-3 flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-            <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-            <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-            <span className="ml-2 text-slate-500 text-xs font-mono">harsh@devops:~$</span>
+          {/* Window chrome */}
+          <div className="term-chrome px-4 py-3 flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#ff5f57] hover:brightness-110 cursor-pointer transition-all" title="close" />
+            <div className="w-3 h-3 rounded-full bg-[#ffbd2e] hover:brightness-110 cursor-pointer transition-all" title="minimize" />
+            <div className="w-3 h-3 rounded-full bg-[#28c840] hover:brightness-110 cursor-pointer transition-all" title="maximize" />
+            <div className="flex-1 flex justify-center">
+              <span className="text-slate-500 text-xs font-mono">harsh@devops — ~/cloud/career — bash</span>
+            </div>
           </div>
 
           {/* Body */}
           <div
-            className="bg-[#0d0d1a] border border-t-0 border-[#00d4ff]/15 rounded-b-xl p-5 h-80 overflow-y-auto font-mono text-sm"
+            className="glass p-5 h-80 overflow-y-auto font-mono text-sm"
             onWheel={(e) => e.stopPropagation()}
           >
             {history.map((line, i) => (
-              <div
-                key={i}
-                className={`leading-6 whitespace-pre-wrap ${
-                  line.type === "input"
-                    ? "text-[#00d4ff]"
-                    : line.type === "error"
-                    ? "text-red-400"
-                    : line.type === "blank"
-                    ? "h-3"
-                    : "text-slate-300"
-                }`}
-              >
-                {line.content}
+              <div key={i} className={`leading-6 whitespace-pre-wrap term-select rounded px-1 -mx-1 transition-all ${line.length === 1 && line[0].tok === "blank" ? "h-3" : ""}`}>
+                {line.map((seg, j) =>
+                  seg.tok === "blank" ? null : (
+                    <span key={j} className={tokClass[seg.tok]}>{seg.text}</span>
+                  )
+                )}
               </div>
             ))}
 
             {/* Input row */}
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-[#00d4ff]">$</span>
+            <div className="flex items-center gap-1 mt-1 tok-prompt">
+              <span>$&nbsp;</span>
               <input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKey}
-                className="flex-1 bg-transparent outline-none text-[#00d4ff] caret-[#00d4ff] ml-1"
+                className="flex-1 bg-transparent outline-none tok-cmd caret-[#89dceb]"
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
@@ -217,7 +229,8 @@ export default function InteractiveTerminal() {
             <button
               key={cmd}
               onClick={() => { run(cmd); inputRef.current?.focus(); }}
-              className="px-3 py-1 text-xs rounded-lg bg-[#1e1e2e] border border-white/5 text-slate-400 hover:border-[#00d4ff]/30 hover:text-[#00d4ff] transition-all font-mono"
+              className="px-3 py-1 text-xs rounded-lg border border-white/5 text-slate-500 hover:border-[#89dceb]/30 hover:text-[#89dceb] hover:bg-[#89dceb]/5 transition-all font-mono"
+              style={{ background: "rgba(30,30,46,0.6)" }}
             >
               {cmd}
             </button>

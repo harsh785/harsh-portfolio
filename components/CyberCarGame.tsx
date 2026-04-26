@@ -402,6 +402,199 @@ function makeCloud(x:number,y:number,z:number) {
   g.position.set(x,y,z); return g;
 }
 
+// ─── Bush ─────────────────────────────────────────────────────────────────────
+function makeBush(x:number,z:number,s=1) {
+  const g=new THREE.Group();
+  const colors=[0x2e8b2e,0x3a9a3a,0x266626,0x4aaa4a];
+  [[0,0,0,0.55],[0.32,0.05,0.12,0.40],[-0.28,0.04,-0.14,0.38],[0.10,0.15,-0.08,0.34],[-0.12,0.10,0.22,0.32]].forEach(([bx,by,bz,br],i)=>{
+    const b=new THREE.Mesh(new THREE.IcosahedronGeometry(br*s,1),flat(colors[i%colors.length]));
+    b.position.set(bx*s,by*s,bz*s); b.castShadow=true; g.add(b);
+  });
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI*2; return g;
+}
+
+// ─── Flowers ──────────────────────────────────────────────────────────────────
+function makeFlowerPatch(x:number,z:number) {
+  const g=new THREE.Group();
+  const fc=[0xf9e2af,0xf38ba8,0xcba6f7,0xa6e3a1,0x89dceb,0xfab387];
+  for(let i=0;i<8;i++){
+    const ang=Math.random()*Math.PI*2, r=Math.random()*0.9;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.28,4),flat(0x4a8a2a));
+    stem.position.set(Math.cos(ang)*r,0.14,Math.sin(ang)*r); g.add(stem);
+    const flower=new THREE.Mesh(new THREE.SphereGeometry(0.08,5,4),flat(fc[i%fc.length]));
+    flower.position.set(Math.cos(ang)*r,0.28+Math.random()*0.1,Math.sin(ang)*r); g.add(flower);
+  }
+  g.position.set(x,0,z); return g;
+}
+
+// ─── Traffic cone ─────────────────────────────────────────────────────────────
+function makeConeMesh() {
+  const g=new THREE.Group();
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.55,8),flat(0xff5500));
+  cone.position.y=0.32; g.add(cone);
+  const band=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.08,8),flat(0xffffff));
+  band.position.y=0.32; g.add(band);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.24,0.07,8),flat(0xcc3300));
+  base.position.y=0.04; g.add(base);
+  g.traverse(m=>{(m as THREE.Mesh).castShadow=true;});
+  return g;
+}
+
+// ─── Barrel ───────────────────────────────────────────────────────────────────
+function makeBarrelMesh(color=0x885533) {
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.24,0.70,10),flat(color));
+  body.position.y=0.35; g.add(body);
+  for(const by of[0.12,0.35,0.58]){
+    const ring=new THREE.Mesh(new THREE.CylinderGeometry(0.27,0.27,0.05,10),flat(0x444444));
+    ring.position.y=by; g.add(ring);
+  }
+  const lid=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.05,10),flat(0x333333)); lid.position.y=0.72; g.add(lid);
+  g.traverse(m=>{(m as THREE.Mesh).castShadow=true;}); return g;
+}
+
+// ─── Wooden crate ─────────────────────────────────────────────────────────────
+function makeCrateMesh() {
+  const g=new THREE.Group();
+  const box=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.7,0.7),flat(0xc8a060));
+  box.castShadow=true; g.add(box);
+  for(const [axis,vals] of[['x',[-0.35,0.35]],['z',[-0.35,0.35]]] as [string,number[]][]) {
+    for(const v of vals){
+      const plank=new THREE.Mesh(new THREE.BoxGeometry(axis==='x'?0.04:0.72,0.72,axis==='x'?0.72:0.04),flat(0x8a5a28));
+      plank.position.set(axis==='x'?v:0,0,axis==='z'?v:0); g.add(plank);
+    }
+  }
+  for(const dy of[-0.34,0.34]){
+    const band=new THREE.Mesh(new THREE.BoxGeometry(0.72,0.04,0.72),flat(0x6a3a10)); band.position.y=dy; g.add(band);
+  }
+  g.traverse(m=>{(m as THREE.Mesh).castShadow=true;}); return g;
+}
+
+// ─── Bench ────────────────────────────────────────────────────────────────────
+function makeBench(x:number,z:number,ry=0) {
+  const g=new THREE.Group();
+  const seat=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.07,0.44),flat(0xc8a060)); seat.position.y=0.50; g.add(seat);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.40,0.07),flat(0xb89050)); back.position.set(0,0.76,-0.19); g.add(back);
+  for(const lx of[-0.55,0.55]){
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.50,0.40),flat(0x777777)); leg.position.set(lx,0.25,0); g.add(leg);
+  }
+  g.position.set(x,0,z); g.rotation.y=ry;
+  g.traverse(m=>{(m as THREE.Mesh).castShadow=true;}); return g;
+}
+
+// ─── Fire hydrant ─────────────────────────────────────────────────────────────
+function makeHydrant(x:number,z:number) {
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.14,0.48,8),flat(0xdd2222)); body.position.y=0.24; g.add(body);
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(0.10,0.12,0.12,8),flat(0xcc1a1a)); top.position.y=0.54; g.add(top);
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(0.09,8,6),flat(0xbb0000)); cap.position.y=0.64; g.add(cap);
+  for(const rx of[-1,1]){
+    const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.14,6),flat(0xcc1a1a));
+    nozzle.position.set(rx*0.16,0.32,0); nozzle.rotation.z=Math.PI/2; g.add(nozzle);
+  }
+  g.position.set(x,0,z);
+  g.traverse(m=>{(m as THREE.Mesh).castShadow=true;}); return g;
+}
+
+// ─── Street light (decorative pole + glow) ────────────────────────────────────
+function makeStreetLight(x:number,z:number,ry=0) {
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.06,4.2,6),flat(0x777777)); pole.position.y=2.1; pole.castShadow=true; g.add(pole);
+  const arm=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,0.90),flat(0x777777)); arm.position.set(0,4.25,0.45); g.add(arm);
+  const fixture=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.10,0.24),flat(0x555555)); fixture.position.set(0,4.18,0.90); g.add(fixture);
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.08,6,5),new THREE.MeshPhongMaterial({color:0xffffcc,emissive:0xffff88,emissiveIntensity:2}));
+  bulb.position.set(0,4.12,0.90); g.add(bulb);
+  g.position.set(x,0,z); g.rotation.y=ry; return g;
+}
+
+// ─── Fountain ─────────────────────────────────────────────────────────────────
+function makeFountain() {
+  const g=new THREE.Group();
+  // Basin
+  const basin=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.4,0.44,16),flat(0xd0c8b8));
+  basin.position.y=0.22; g.add(basin);
+  // Water
+  const water=new THREE.Mesh(new THREE.CylinderGeometry(2.0,2.0,0.10,16),flat(C.water));
+  water.position.y=0.42; g.add(water);
+  // Center column
+  const col=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.22,1.20,8),flat(0xc8c0b0)); col.position.y=0.44; g.add(col);
+  // Top bowl
+  const bowl=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.30,0.28,10),flat(0xd0c8b8)); bowl.position.y=1.30; g.add(bowl);
+  // Water top
+  const wtop=new THREE.Mesh(new THREE.CylinderGeometry(0.48,0.48,0.06,10),flat(0x4fc3f7)); wtop.position.y=1.45; g.add(wtop);
+  // Water spout drops (small spheres)
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2;
+    const drop=new THREE.Mesh(new THREE.SphereGeometry(0.05,5,4),flat(0x7dd8f8,{transparent:true,opacity:0.8}));
+    drop.position.set(Math.cos(a)*0.80,1.10+Math.sin(i)*0.15,Math.sin(a)*0.80); g.add(drop);
+  }
+  // Decorative statues (small pillars)
+  for(let i=0;i<4;i++){
+    const a=(i/4)*Math.PI*2;
+    const pillar=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.10,0.60,6),flat(0xc8c0b0));
+    pillar.position.set(Math.cos(a)*1.7,0.52,Math.sin(a)*1.7); g.add(pillar);
+    const topS=new THREE.Mesh(new THREE.SphereGeometry(0.12,6,5),flat(0xd8d0c0)); topS.position.set(Math.cos(a)*1.7,0.90,Math.sin(a)*1.7); g.add(topS);
+  }
+  g.traverse(m=>{const mm=m as THREE.Mesh; if(mm.isMesh)mm.castShadow=true;});
+  return g;
+}
+
+// ─── Gas station ──────────────────────────────────────────────────────────────
+function makeGasStation(x:number,z:number,ry=0) {
+  const g=new THREE.Group();
+  // Ground pad
+  const pad=new THREE.Mesh(new THREE.BoxGeometry(8,0.06,6),flat(0xc0b898)); pad.position.y=0.03; g.add(pad);
+  // Canopy structure
+  const canopy=new THREE.Mesh(new THREE.BoxGeometry(7.5,0.18,5.5),flat(0xe8e0d0)); canopy.position.y=3.40; canopy.castShadow=true; g.add(canopy);
+  for(const px of[-2.8,2.8]){
+    const col=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,3.4,8),flat(0xd0c8b8)); col.position.set(px,1.70,0); col.castShadow=true; g.add(col);
+  }
+  // Pump islands
+  for(const px of[-1.4,1.4]){
+    const island=new THREE.Mesh(new THREE.BoxGeometry(0.70,0.22,1.50),flat(0xcccccc)); island.position.set(px,0.11,0); g.add(island);
+    const pump=new THREE.Mesh(new THREE.BoxGeometry(0.30,1.10,0.30),flat(0xee4444)); pump.position.set(px,0.77,0); pump.castShadow=true; g.add(pump);
+    const screen=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.28,0.06),flat(0x111111)); screen.position.set(px,1.15,0.17); g.add(screen);
+    const hose=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.50,5),flat(0x333333)); hose.position.set(px+0.18,0.80,0); hose.rotation.z=0.4; g.add(hose);
+  }
+  // Price sign
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.80,0.10),flat(0x226622)); sign.position.set(3.2,2.5,0); g.add(sign);
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.5,6),flat(0x888888)); pole.position.set(3.2,1.25,0); g.add(pole);
+  // Building at back
+  const bldg=new THREE.Mesh(new THREE.BoxGeometry(3.5,2.2,2.2),flat(0xf0e8d0)); bldg.position.set(0,1.1,-2.9); bldg.castShadow=true; g.add(bldg);
+  const broof=new THREE.Mesh(new THREE.BoxGeometry(3.8,0.12,2.5),flat(0xdd4411)); broof.position.set(0,2.26,-2.9); g.add(broof);
+  g.position.set(x,0,z); g.rotation.y=ry;
+  g.traverse(m=>{const mm=m as THREE.Mesh; if(mm.isMesh){mm.castShadow=true;mm.receiveShadow=true;}}); return g;
+}
+
+// ─── Roundabout ───────────────────────────────────────────────────────────────
+function makeRoundabout(x:number,z:number) {
+  const g=new THREE.Group();
+  // Outer ring road
+  const outer=new THREE.Mesh(new THREE.TorusGeometry(5.5,2.0,6,28),flat(C.road)); outer.rotation.x=Math.PI/2; outer.position.y=0.03; g.add(outer);
+  // Inner grass circle
+  const inner=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.2,0.08,20),flat(C.ground)); inner.position.y=0.04; g.add(inner);
+  // Center tree cluster
+  scene_temp_trees(g,0,0);
+  // Kerb
+  const kerb=new THREE.Mesh(new THREE.TorusGeometry(3.5,0.18,6,24),flat(0xcccccc)); kerb.rotation.x=Math.PI/2; kerb.position.y=0.06; g.add(kerb);
+  g.position.set(x,0,z); return g;
+}
+function scene_temp_trees(g:THREE.Group,x:number,z:number) {
+  [[0,0,1.2],[1.4,0,.9],[-.9,0,1],[ 0,0,-1.1]].forEach(([tx,,tz],i)=>{
+    const t=makeTree(tx+x,tz+z,.8+i*.1,i%2); g.add(t);
+  });
+}
+
+// ─── Zebra crossing ───────────────────────────────────────────────────────────
+function makeZebra(x:number,z:number,ry=0) {
+  const g=new THREE.Group();
+  for(let i=-3;i<=3;i++){
+    const stripe=new THREE.Mesh(new THREE.BoxGeometry(6.5,0.04,0.55),flat(0xfafafa));
+    stripe.position.set(0,0.03,i*0.90); g.add(stripe);
+  }
+  g.position.set(x,0,z); g.rotation.y=ry; return g;
+}
+
 // ─── DevOps collectibles ──────────────────────────────────────────────────────
 function makeK8sPod() {
   const g = new THREE.Group();
@@ -604,32 +797,64 @@ export default function CyberCarGame() {
     const groundMesh=new THREE.Mesh(groundGeo,flat(C.ground)); groundMesh.rotation.x=-Math.PI/2; groundMesh.receiveShadow=true; scene.add(groundMesh);
     const gBody=new CANNON.Body({mass:0}); gBody.addShape(new CANNON.Plane()); gBody.quaternion.setFromEuler(-Math.PI/2,0,0); world.addBody(gBody);
 
-    // Grass patches
-    for(let i=0;i<40;i++){
-      const patch=new THREE.Mesh(new THREE.CircleGeometry(2+Math.random()*4,7),flat(Math.random()>.5?C.groundAlt:C.hill));
+    // ── Ground color variation ──────────────────────────────────────────────
+    for(let i=0;i<60;i++){
+      const patch=new THREE.Mesh(new THREE.CircleGeometry(1.5+Math.random()*5,7),flat(Math.random()>.5?C.groundAlt:C.hill));
       patch.rotation.x=-Math.PI/2; patch.position.set((Math.random()-.5)*180,0.02,(Math.random()-.5)*180); scene.add(patch);
     }
-
-    // Roads
-    const addRoad=(x:number,z:number,w:number,d:number,ry=0)=>{
-      const m=new THREE.Mesh(new THREE.BoxGeometry(w,0.04,d),flat(C.road));
-      m.position.set(x,0.02,z); m.rotation.y=ry; m.receiveShadow=true; scene.add(m);
-      const cl=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.05,d*0.96),flat(0xfafafa));
-      cl.position.set(x,0.05,z); cl.rotation.y=ry; scene.add(cl);
-      for(const side of[-1,1]){
-        const curb=new THREE.Mesh(new THREE.BoxGeometry(0.20,0.07,d),flat(0xcccccc));
-        const off=new THREE.Vector3(side*(w/2+0.10),0.04,0).applyEuler(new THREE.Euler(0,ry,0));
-        curb.position.set(x+off.x,0.04,z+off.z); curb.rotation.y=ry; scene.add(curb);
-      }
-    };
-    addRoad(0,0,7,140); addRoad(0,0,140,7,Math.PI/2);
-    addRoad(-17,-33,5,22,0.14); addRoad(18,-27,5,22,-0.12);
-    addRoad(-16,34,5,22,0.12);  addRoad(16,37,5,22,-0.14);
-    for(let ri=-68;ri<68;ri+=7) for(const sx of[-3.2,3.2]){
-      const d=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.05,3),flat(C.roadLine)); d.position.set(sx,0.05,ri); scene.add(d);
+    // Dirt paths
+    for(const [px,pz,pw,pd,pr2] of[[-12,-6,2.5,18,.3],[12,8,2.5,16,-.2],[0,30,2,20,0]] as [number,number,number,number,number][]){
+      const dirt=new THREE.Mesh(new THREE.BoxGeometry(pw,.03,pd),flat(C.sand)); dirt.position.set(px,.01,pz); dirt.rotation.y=pr2; scene.add(dirt);
     }
 
-    // Zones
+    // ── Roads ───────────────────────────────────────────────────────────────
+    const addRoad=(x:number,z:number,w:number,d:number,ry=0)=>{
+      const m=new THREE.Mesh(new THREE.BoxGeometry(w,0.05,d),flat(C.road));
+      m.position.set(x,0.02,z); m.rotation.y=ry; m.receiveShadow=true; scene.add(m);
+      const cl=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.06,d*0.96),flat(0xf8f8f8));
+      cl.position.set(x,0.06,z); cl.rotation.y=ry; scene.add(cl);
+      for(const side of[-1,1]){
+        const curb=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.09,d),flat(0xdddddd));
+        const off=new THREE.Vector3(side*(w/2+0.11),0.05,0).applyEuler(new THREE.Euler(0,ry,0));
+        curb.position.set(x+off.x,0.05,z+off.z); curb.rotation.y=ry; scene.add(curb);
+      }
+    };
+    addRoad(0,0,8,144); addRoad(0,0,144,8,Math.PI/2);
+    addRoad(-17,-33,6,24,0.14); addRoad(18,-27,6,24,-0.12);
+    addRoad(-16,34,6,24,0.12);  addRoad(16,37,6,24,-0.14);
+    // Dashed side lanes
+    for(let ri=-70;ri<70;ri+=7) for(const sx of[-3.5,3.5]){
+      const d=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.06,3.2),flat(C.roadLine)); d.position.set(sx,0.06,ri); scene.add(d);
+    }
+    // Zebra crossings at intersections
+    scene.add(makeZebra( 0, 12));
+    scene.add(makeZebra( 0,-12));
+    scene.add(makeZebra(12,  0, Math.PI/2));
+    scene.add(makeZebra(-12, 0, Math.PI/2));
+    // Road arrows (forward triangles)
+    for(const [ax,az,ary] of[[0,-40,0],[0,40,Math.PI],[30,0,Math.PI/2],[-30,0,-Math.PI/2]] as [number,number,number][]){
+      const arrow=new THREE.Mesh(new THREE.ConeGeometry(0.8,2.0,3),flat(0xf5f5f5));
+      arrow.rotation.x=-Math.PI/2; arrow.rotation.z=ary; arrow.position.set(ax,.06,az); scene.add(arrow);
+    }
+    // Junction paving
+    const junc=new THREE.Mesh(new THREE.BoxGeometry(8,0.05,8),flat(C.road)); junc.position.set(0,0.03,0); scene.add(junc);
+
+    // ── Fountain (home zone center) ──────────────────────────────────────────
+    const fountain=makeFountain(); fountain.position.set(0,0,8); scene.add(fountain);
+
+    // ── Roundabout ─────────────────────────────────────────────────────────
+    // (decorative at a secondary intersection)
+    const roundaboutGroup = new THREE.Group();
+    const outerRing=new THREE.Mesh(new THREE.TorusGeometry(5.5,2.0,6,28),flat(C.road)); outerRing.rotation.x=Math.PI/2; outerRing.position.y=0.03; roundaboutGroup.add(outerRing);
+    const innerCircle=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.2,0.08,20),flat(C.ground)); innerCircle.position.y=0.04; roundaboutGroup.add(innerCircle);
+    const kerb=new THREE.Mesh(new THREE.TorusGeometry(3.5,0.18,6,24),flat(0xcccccc)); kerb.rotation.x=Math.PI/2; kerb.position.y=0.06; roundaboutGroup.add(kerb);
+    for(let a=0;a<4;a++) roundaboutGroup.add(makeTree(Math.cos(a/4*Math.PI*2)*2,Math.sin(a/4*Math.PI*2)*2,.7,a%2));
+    roundaboutGroup.position.set(-26,0,0); scene.add(roundaboutGroup);
+
+    // ── Gas station ─────────────────────────────────────────────────────────
+    scene.add(makeGasStation(22, -38, -0.3));
+
+    // ── Zones ───────────────────────────────────────────────────────────────
     for(const z of ZONES){
       const [zx,zz]=z.pos;
       const pad=new THREE.Mesh(new THREE.CylinderGeometry(z.radius,z.radius,0.07,28),new THREE.MeshLambertMaterial({color:z.color,flatShading:true,transparent:true,opacity:0.38}));
@@ -637,9 +862,14 @@ export default function CyberCarGame() {
       const ring=new THREE.Mesh(new THREE.TorusGeometry(z.radius,0.14,6,30),flat(z.color));
       ring.rotation.x=Math.PI/2; ring.position.set(zx,0.09,zz); scene.add(ring);
       const sign=makeSign(z.color); sign.position.set(zx,0,zz-z.radius+1.2); scene.add(sign);
+      // Benches in each zone
+      for(let a=0;a<2;a++){
+        const ba=(a/2)*Math.PI*2+Math.PI/4;
+        scene.add(makeBench(zx+Math.cos(ba)*(z.radius-2),zz+Math.sin(ba)*(z.radius-2), ba+Math.PI/2));
+      }
     }
 
-    // Trees
+    // ── Trees ───────────────────────────────────────────────────────────────
     const treeData:[number,number,number,number][]=[
       [-9,-9,.9,0],[-13,5,1.1,1],[-5,17,.85,0],[10,-12,1,1],[16,-5,.9,0],[12,14,1.1,1],
       [-7,-24,1,0],[-21,-12,1.2,1],[-25,7,.85,0],[-17,24,1,1],[24,-17,1.1,0],[27,-7,.9,1],
@@ -648,17 +878,58 @@ export default function CyberCarGame() {
       [-38,5,.9,0],[2,-42,1.1,1],[2,42,.85,0],[43,24,1,1],[-43,24,.9,0],[17,-39,1.1,1],
       [-17,-39,1,0],[33,-39,.9,1],[-33,39,1.1,0],[44,-34,.85,1],[-44,-34,1,0],
       [7,-15,.85,1],[-7,-15,.9,0],[20,1,1,1],[-20,1,.9,0],[1,20,1.1,1],[1,-20,1,0],
+      // Avenue trees along main road
+      [-5,-50,.85,1],[5,-50,.85,0],[-5,50,.85,1],[5,50,.85,0],
+      [-5,-35,.8,0],[5,-35,.8,1],[-5,35,.8,0],[5,35,.8,1],
+      [-50,-5,.9,1],[-50,5,.9,0],[50,-5,.9,1],[50,5,.9,0],
     ];
     for(const [tx,tz,s,t] of treeData) scene.add(makeTree(tx,tz,s,t));
-    [[-18,-18],[18,-20],[20,18],[-16,20],[24,-30],[30,24],[-26,30],[36,-22],[-36,-22]].forEach(([rx,rz])=>
+
+    // ── Bushes ──────────────────────────────────────────────────────────────
+    const bushPos:[number,number,number][]=[
+      [6,-8,.9],[-6,-8,.8],[8,5,1],[-8,5,.85],[14,14,.9],[-14,14,.8],
+      [5,22,1],[-5,22,.9],[18,-5,.85],[-18,-5,1],[22,18,.8],[-22,18,.9],
+      [10,-25,.9],[-10,-25,.8],[26,-10,1],[-26,-10,.85],[8,32,.9],[-8,32,.8],
+      [32,14,.85],[-32,14,.9],[14,-32,1],[-14,-32,.8],[0,14,.7],[0,-14,.75],
+    ];
+    // filter valid positions
+    for(const [bx,bz,bs] of bushPos.filter(p=>p)) scene.add(makeBush(bx,bz,bs));
+
+    // ── Flower patches ──────────────────────────────────────────────────────
+    const flowerPos:[number,number][]=[
+      [4,-6],[-4,-6],[8,-2],[-8,-2],[3,10],[-3,10],[10,-8],[-10,-8],
+      [16,16],[-16,16],[0,18],[0,-18],[20,-12],[-20,-12],[12,22],[-12,22],
+      [6,-22],[-6,-22],[24,8],[-24,8],[2,-30],[-2,-30],[28,-4],[-28,-4],
+    ];
+    for(const [fx,fz] of flowerPos.filter(p=>p)) scene.add(makeFlowerPatch(fx,fz));
+
+    // ── Rocks ───────────────────────────────────────────────────────────────
+    [[-18,-18],[18,-20],[20,18],[-16,20],[24,-30],[30,24],[-26,30],[36,-22],[-36,-22],[10,-38],[-10,38]].forEach(([rx,rz])=>
       scene.add(makeRocks(rx,rz,2+Math.floor(Math.random()*3)))
     );
 
-    // Houses, lamps
-    [[-10,-34,.3],[8,-34,-.3],[-40,16,.8],[40,-16,-.8],[-40,-28,1.4],[44,10,-.5]].forEach(([x,z,r])=>scene.add(makeHouse(x,z,r)));
-    for(let lz=-56;lz<=56;lz+=10){ scene.add(makeLamp(4.6,lz)); scene.add(makeLamp(-4.6,lz)); }
+    // ── Houses ──────────────────────────────────────────────────────────────
+    [[-10,-34,.3],[8,-34,-.3],[-40,16,.8],[40,-16,-.8],[-40,-28,1.4],[44,10,-.5],
+     [28,-50,.5],[-28,-50,-.5],[50,28,-1],[-50,28,1]].forEach(([x,z,r])=>scene.add(makeHouse(x,z,r)));
 
-    // Hills
+    // ── Street lights along main road ───────────────────────────────────────
+    for(let lz=-60;lz<=60;lz+=12){
+      scene.add(makeStreetLight( 5.5,lz, 0));
+      scene.add(makeStreetLight(-5.5,lz, Math.PI));
+    }
+    // Side road lights
+    for(let lz=-60;lz<=60;lz+=12){
+      scene.add(makeStreetLight(lz, 5.5, Math.PI/2));
+      scene.add(makeStreetLight(lz,-5.5,-Math.PI/2));
+    }
+
+    // ── Benches and hydrants along sidewalks ────────────────────────────────
+    for(const [bx,bz,br] of[[8,-30,0],[8,30,Math.PI],[-8,-30,Math.PI],[-8,30,0]] as [number,number,number][])
+      scene.add(makeBench(bx,bz,br));
+    for(const [hx,hz] of[[10,-22],[-10,-22],[10,22],[-10,22],[22,10],[-22,10]] as [number,number][])
+      scene.add(makeHydrant(hx,hz));
+
+    // ── Hills ───────────────────────────────────────────────────────────────
     for(const [hx,hz,hr,hh] of[[-34,-32,9,6],[36,-26,9,6],[-32,35,9,6],[32,38,9,6]] as [number,number,number,number][]){
       const hill=new THREE.Mesh(new THREE.ConeGeometry(hr,hh,9),flat(C.hill));
       hill.position.set(hx,hh/2-.4,hz); hill.castShadow=true; hill.receiveShadow=true; scene.add(hill);
@@ -666,20 +937,62 @@ export default function CyberCarGame() {
       const hb=new CANNON.Body({mass:0}); hb.addShape(new CANNON.Cylinder(0.1,hr,hh,9)); hb.position.set(hx,hh/2-.4,hz); world.addBody(hb);
     }
 
-    // Ramp
+    // ── Ramp ────────────────────────────────────────────────────────────────
     const ramp=new THREE.Mesh(new THREE.BoxGeometry(5.5,.3,9),flat(C.road));
-    ramp.position.set(0,.90,-22); ramp.rotation.x=-.17; ramp.castShadow=true; ramp.receiveShadow=true; scene.add(ramp);
+    ramp.position.set(0,.90,-26); ramp.rotation.x=-.17; ramp.castShadow=true; ramp.receiveShadow=true; scene.add(ramp);
     const rampB=new CANNON.Body({mass:0}); rampB.addShape(new CANNON.Box(new CANNON.Vec3(2.75,.15,4.5)));
-    rampB.position.set(0,.90,-22); rampB.quaternion.setFromEuler(-.17,0,0); world.addBody(rampB);
+    rampB.position.set(0,.90,-26); rampB.quaternion.setFromEuler(-.17,0,0); world.addBody(rampB);
 
-    // Pond
-    const pond=new THREE.Mesh(new THREE.CircleGeometry(6,18),flat(C.water)); pond.rotation.x=-Math.PI/2; pond.position.set(18,.07,18); scene.add(pond);
-    const pr=new THREE.Mesh(new THREE.TorusGeometry(6,.22,6,20),flat(C.waterEdge)); pr.rotation.x=Math.PI/2; pr.position.set(18,.09,18); scene.add(pr);
-    const shore=new THREE.Mesh(new THREE.CircleGeometry(7.5,18),flat(C.sand)); shore.rotation.x=-Math.PI/2; shore.position.set(18,.03,18); scene.add(shore);
+    // ── Pond + park ─────────────────────────────────────────────────────────
+    const shore=new THREE.Mesh(new THREE.CircleGeometry(8,20),flat(C.sand)); shore.rotation.x=-Math.PI/2; shore.position.set(20,.02,20); scene.add(shore);
+    const pond=new THREE.Mesh(new THREE.CircleGeometry(6,20),flat(C.water)); pond.rotation.x=-Math.PI/2; pond.position.set(20,.07,20); scene.add(pond);
+    const pr=new THREE.Mesh(new THREE.TorusGeometry(6,.22,6,20),flat(C.waterEdge)); pr.rotation.x=Math.PI/2; pr.position.set(20,.09,20); scene.add(pr);
+    // Pond lily pads
+    for(let i=0;i<5;i++){
+      const a=(i/5)*Math.PI*2;
+      const lily=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,.04,7),flat(0x3aaa3a)); lily.position.set(20+Math.cos(a)*3.5,.12,20+Math.sin(a)*3.5); scene.add(lily);
+    }
+    // Park benches around pond
+    for(let i=0;i<4;i++){
+      const a=(i/4)*Math.PI*2;
+      scene.add(makeBench(20+Math.cos(a)*9,20+Math.sin(a)*9,a+Math.PI));
+    }
+    // Park trees
+    for(let i=0;i<6;i++) scene.add(makeTree(20+Math.cos(i/6*Math.PI*2)*10,20+Math.sin(i/6*Math.PI*2)*10,.85,i%2));
 
-    // Fences
+    // ── World border fences ─────────────────────────────────────────────────
     scene.add(makeFence(-70,-70,70,-70)); scene.add(makeFence(70,-70,70,70));
     scene.add(makeFence(70,70,-70,70));  scene.add(makeFence(-70,70,-70,-70));
+
+    // ── Knockable props (physics) ────────────────────────────────────────────
+    type KnockProp = { mesh: THREE.Group; body: CANNON.Body };
+    const knockProps: KnockProp[] = [];
+    const addKnock = (mesh: THREE.Group, bx:number,by:number,bz:number, shape: CANNON.Shape, mass:number) => {
+      mesh.position.set(bx,by,bz); scene.add(mesh);
+      const body=new CANNON.Body({mass});
+      body.addShape(shape); body.position.set(bx,by,bz);
+      body.linearDamping=0.4; body.angularDamping=0.6;
+      world.addBody(body);
+      knockProps.push({mesh,body});
+    };
+    // Traffic cones — on road edges
+    const coneShape=new CANNON.Cylinder(0.05,0.22,0.58,8);
+    for(const [cx,cz] of[[4,-8],[-4,-8],[4,8],[-4,8],[10,-20],[-10,-20],[10,20],[-10,20],
+                          [20,-4],[-20,-4],[20,4],[-20,4],[5,-42],[-5,-42],[5,42],[-5,42]] as [number,number][])
+      addKnock(makeConeMesh(), cx,0.35,cz, coneShape, 2);
+
+    // Barrels — near buildings
+    const barrelShape=new CANNON.Cylinder(0.26,0.24,0.72,8);
+    for(const [bx,bz,col] of[[-12,-30,0x885533],[12,-30,0x446688],[-15,30,0x664422],[15,30,0x883344],
+                               [38,-8,0x885533],[-38,8,0x446688]] as [number,number,number][])
+      addKnock(makeBarrelMesh(col), bx,0.40,bz, barrelShape, 18);
+
+    // Wooden crates — stacked pairs
+    const crateShape=new CANNON.Box(new CANNON.Vec3(0.35,0.35,0.35));
+    for(const [cx,cz] of[[-8,-38],[8,-38],[30,-20],[-30,-20],[-8,40]] as [number,number][]){
+      addKnock(makeCrateMesh(), cx,0.35,cz,  crateShape, 22);
+      addKnock(makeCrateMesh(), cx,1.05,cz+.2, crateShape, 22); // stacked
+    }
 
     // ── DevOps Collectibles ──────────────────────────────────────────────────
     const collectibleDefs:[number,number,number,"pod"|"tf"][] = [
@@ -801,6 +1114,13 @@ export default function CyberCarGame() {
         const wt=wi.worldTransform;
         wheelMeshes[i].position.set(wt.position.x,wt.position.y,wt.position.z);
         wheelMeshes[i].quaternion.set(wt.quaternion.x,wt.quaternion.y,wt.quaternion.z,wt.quaternion.w);
+      });
+
+      // Sync knockable props
+      knockProps.forEach(({mesh,body})=>{
+        const p=body.position, q=body.quaternion;
+        mesh.position.set(p.x,p.y,p.z);
+        mesh.quaternion.set(q.x,q.y,q.z,q.w);
       });
 
       // Animate collectibles (bob + spin)

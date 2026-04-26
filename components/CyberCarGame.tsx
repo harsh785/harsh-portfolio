@@ -7,11 +7,10 @@ import * as CANNON from "cannon-es";
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
   sky:       0x6ab4d8,
-  skyHori:   0x9dd4e8,
   ground:    0x7ab84e,
   groundAlt: 0x6aad3e,
   road:      0xc8b080,
-  roadLine:  0xf5e6a0,
+  roadLine:  0xf5e680,
   trunk:     0x7a5230,
   leaf:      0x3a8a3a,
   leafMid:   0x2e7a2e,
@@ -23,224 +22,259 @@ const C = {
   rock:      0x888888,
   rockDark:  0x606060,
   hill:      0x6aaa38,
-  hillDark:  0x5a9a28,
   sand:      0xd4c080,
   fence:     0xb89060,
-  // Car colors
-  carBody:   0xff3a3a,
-  carDark:   0xcc1a1a,
-  carTop:    0xff6060,
-  carGlass:  0x88d8f8,
-  carRim:    0xe0e0e0,
-  carTire:   0x1a1a1a,
-  carLight:  0xfffaaa,
-  carTail:   0xff2244,
-  carUnder:  0x880000,
+  // Car
+  carPrimary: 0xff2d2d,
+  carDark:    0xb81818,
+  carBlack:   0x111111,
+  carChrome:  0xdddddd,
+  carGlass:   0x88ccee,
+  carRim:     0xe8e8e8,
+  carLight:   0xfffacc,
+  carTail:    0xff1133,
 };
 
-function flat(color: number, opts: Partial<THREE.MeshLambertMaterialParameters> = {}) {
-  return new THREE.MeshLambertMaterial({ color, flatShading: true, ...opts });
-}
-function phong(color: number, opts: Partial<THREE.MeshPhongMaterialParameters> = {}) {
-  return new THREE.MeshPhongMaterial({ color, flatShading: true, shininess: 60, ...opts });
-}
+const flat  = (c: number, o: Partial<THREE.MeshLambertMaterialParameters> = {}) =>
+  new THREE.MeshLambertMaterial({ color: c, flatShading: true, ...o });
+const phong = (c: number, o: Partial<THREE.MeshPhongMaterialParameters> = {}) =>
+  new THREE.MeshPhongMaterial({ color: c, flatShading: true, shininess: 80, ...o });
+const glass = (c: number, op = 0.55) =>
+  new THREE.MeshPhongMaterial({ color: c, transparent: true, opacity: op, shininess: 180, flatShading: false, side: THREE.DoubleSide });
 
-// ─── Low-poly Sports Car ──────────────────────────────────────────────────────
+// ─── Car ──────────────────────────────────────────────────────────────────────
+// Car faces +Z (forward). Engine pushes in +Z.
 function makeCarMesh() {
-  const g = new THREE.Group();
+  const root = new THREE.Group();
 
-  const part = (
+  const add = (
     geo: THREE.BufferGeometry,
     mat: THREE.Material,
     x = 0, y = 0, z = 0,
-    rx = 0, ry = 0, rz = 0
+    rx = 0, ry = 0, rz = 0,
   ) => {
     const m = new THREE.Mesh(geo, mat);
     m.position.set(x, y, z);
     m.rotation.set(rx, ry, rz);
     m.castShadow = true;
-    g.add(m);
+    root.add(m);
     return m;
   };
 
-  // ── Chassis / undercarriage ──
-  part(new THREE.BoxGeometry(1.72, 0.14, 3.8), flat(C.carUnder));
+  const body  = phong(C.carPrimary, { shininess: 120 });
+  const dark  = flat(C.carDark);
+  const blk   = flat(C.carBlack);
+  const chr   = phong(C.carChrome, { shininess: 200 });
+  const emitW = phong(C.carLight,  { emissive: 0xffffaa, emissiveIntensity: 0.6, shininess: 200 });
+  const emitR = phong(C.carTail,   { emissive: 0xaa0020, emissiveIntensity: 0.7 });
 
-  // ── Main body — wide low sportscar ──
-  part(new THREE.BoxGeometry(1.72, 0.38, 3.8), phong(C.carBody));
+  // ── Undercarriage ──
+  add(new THREE.BoxGeometry(1.60, 0.12, 3.90), flat(0x0a0a0a), 0, -0.06, 0);
 
-  // ── Hood (front slope) ──
-  const hoodGeo = new THREE.BufferGeometry();
-  const hoodV = new Float32Array([
-    -0.86, 0.19, -0.4,   0.86, 0.19, -0.4,   0.86, 0.19,  1.9,  // top face
-    -0.86, 0.19,  1.9,  -0.86, 0.04, 1.92,   0.86, 0.04, 1.92,  // front slope edge
-    -0.86, 0.19, -0.4,   0.86, 0.19, -0.4,  -0.86,-0.01,-0.4,   // back edge
-     0.86,-0.01,-0.4,
-  ]);
-  // simple approach — use box rotated
-  const hood = part(new THREE.BoxGeometry(1.72, 0.22, 1.6), phong(C.carBody), 0, 0.28, 0.9, -0.10, 0, 0);
+  // ── Main lower body ──
+  add(new THREE.BoxGeometry(1.72, 0.42, 3.90), body, 0, 0.21, 0);
 
-  // ── Cabin (roof area) ──
-  part(new THREE.BoxGeometry(1.44, 0.48, 1.7), phong(C.carBody),    0, 0.6, -0.35);
-  // roof panel
-  part(new THREE.BoxGeometry(1.38, 0.08, 1.5), phong(C.carTop),     0, 0.88, -0.35);
-  // A-pillar slope (front windshield frame)
-  part(new THREE.BoxGeometry(1.44, 0.42, 0.10), phong(C.carDark),  0, 0.6,  0.47, -0.38, 0, 0);
-  // Rear windshield slope
-  part(new THREE.BoxGeometry(1.38, 0.38, 0.10), phong(C.carDark),  0, 0.6, -1.18,  0.30, 0, 0);
+  // ── Hood (slopes up from front) ──
+  add(new THREE.BoxGeometry(1.68, 0.30, 1.40), body, 0, 0.50,  1.12, -0.14, 0, 0);
 
-  // ── Windshield glass ──
-  const glassMat = new THREE.MeshPhongMaterial({
-    color: C.carGlass, transparent: true, opacity: 0.55,
-    shininess: 120, flatShading: false, side: THREE.DoubleSide,
-  });
-  part(new THREE.BoxGeometry(1.28, 0.38, 0.06), glassMat,  0, 0.61,  0.46, -0.38, 0, 0);
-  part(new THREE.BoxGeometry(1.24, 0.34, 0.06), glassMat,  0, 0.61, -1.16,  0.30, 0, 0);
-  // Side windows
-  part(new THREE.BoxGeometry(0.04, 0.32, 0.8), glassMat, -0.73, 0.63, -0.35);
-  part(new THREE.BoxGeometry(0.04, 0.32, 0.8), glassMat,  0.73, 0.63, -0.35);
+  // ── Cabin box ──
+  add(new THREE.BoxGeometry(1.50, 0.50, 1.82), body, 0, 0.67, -0.28);
+
+  // ── Roof ──
+  add(new THREE.BoxGeometry(1.44, 0.09, 1.60), phong(C.carDark, { shininess: 60 }), 0, 0.96, -0.28);
+
+  // ── Windshield frame (A-pillar) ──
+  add(new THREE.BoxGeometry(1.50, 0.40, 0.09), dark, 0, 0.64,  0.61, -0.44, 0, 0);
+  // Rear window frame
+  add(new THREE.BoxGeometry(1.44, 0.36, 0.09), dark, 0, 0.64, -1.18,  0.38, 0, 0);
+
+  // ── Glass ──
+  add(new THREE.BoxGeometry(1.30, 0.37, 0.06), glass(C.carGlass), 0, 0.65,  0.61, -0.44, 0, 0);
+  add(new THREE.BoxGeometry(1.26, 0.32, 0.06), glass(C.carGlass), 0, 0.64, -1.18,  0.38, 0, 0);
+  add(new THREE.BoxGeometry(0.05, 0.38, 0.88), glass(C.carGlass, 0.45), -0.77, 0.65, -0.28);
+  add(new THREE.BoxGeometry(0.05, 0.38, 0.88), glass(C.carGlass, 0.45),  0.77, 0.65, -0.28);
+
+  // ── C-pillar ──
+  add(new THREE.BoxGeometry(0.08, 0.48, 0.09), dark, -0.74, 0.65, -1.15);
+  add(new THREE.BoxGeometry(0.08, 0.48, 0.09), dark,  0.74, 0.65, -1.15);
 
   // ── Side skirts ──
-  part(new THREE.BoxGeometry(0.08, 0.14, 3.4), flat(C.carDark), -0.88, -0.08, 0);
-  part(new THREE.BoxGeometry(0.08, 0.14, 3.4), flat(C.carDark),  0.88, -0.08, 0);
+  add(new THREE.BoxGeometry(0.09, 0.18, 3.60), dark, -0.88, 0.09, 0);
+  add(new THREE.BoxGeometry(0.09, 0.18, 3.60), dark,  0.88, 0.09, 0);
+
+  // ── Wheel arches (visual cutout hint) ──
+  for (const sx of [-1, 1]) {
+    add(new THREE.BoxGeometry(0.10, 0.09, 1.10), flat(C.carDark), sx*0.87, 0.30,  1.30);
+    add(new THREE.BoxGeometry(0.10, 0.09, 1.10), flat(C.carDark), sx*0.87, 0.30, -1.30);
+  }
 
   // ── Front bumper ──
-  part(new THREE.BoxGeometry(1.72, 0.22, 0.16), flat(C.carDark),  0, -0.02, 1.98);
-  part(new THREE.BoxGeometry(1.60, 0.10, 0.14), flat(0x333333),   0, -0.12, 1.99); // grille
-
-  // ── Rear bumper / diffuser ──
-  part(new THREE.BoxGeometry(1.72, 0.22, 0.16), flat(C.carDark),  0, -0.02, -1.98);
-  part(new THREE.BoxGeometry(0.60, 0.08, 0.12), flat(0x333333),   0, -0.13, -1.99); // exhaust
+  add(new THREE.BoxGeometry(1.72, 0.26, 0.14), dark, 0,  0.04, 1.97);
+  // Lower splitter
+  add(new THREE.BoxGeometry(1.62, 0.06, 0.30), blk,  0, -0.09, 2.0);
+  // Grille opening
+  add(new THREE.BoxGeometry(0.82, 0.14, 0.12), blk,  0,  0.14, 1.99);
+  // Grille bars
+  for (let i = -2; i <= 2; i++)
+    add(new THREE.BoxGeometry(0.03, 0.14, 0.06), flat(0x333333), i*0.18, 0.14, 2.02);
+  // Fog lights
+  add(new THREE.BoxGeometry(0.22, 0.10, 0.08), emitW, -0.62, 0.04, 1.97);
+  add(new THREE.BoxGeometry(0.22, 0.10, 0.08), emitW,  0.62, 0.04, 1.97);
 
   // ── Headlights ──
-  const lightMat = phong(C.carLight, { emissive: 0xffffaa, emissiveIntensity: 0.4, shininess: 200 });
-  part(new THREE.BoxGeometry(0.32, 0.11, 0.06), lightMat, -0.62, 0.09, 1.98);
-  part(new THREE.BoxGeometry(0.32, 0.11, 0.06), lightMat,  0.62, 0.09, 1.98);
+  add(new THREE.BoxGeometry(0.36, 0.12, 0.08), emitW, -0.58, 0.20, 1.97);
+  add(new THREE.BoxGeometry(0.36, 0.12, 0.08), emitW,  0.58, 0.20, 1.97);
   // DRL strip
-  part(new THREE.BoxGeometry(1.30, 0.04, 0.04), phong(C.carLight), 0, 0.16, 1.98);
+  add(new THREE.BoxGeometry(1.36, 0.04, 0.06), emitW, 0, 0.30, 1.97);
+
+  // ── Rear bumper ──
+  add(new THREE.BoxGeometry(1.72, 0.26, 0.14), dark, 0, 0.04, -1.97);
+  add(new THREE.BoxGeometry(0.90, 0.06, 0.26), blk,  0,-0.09, -2.0);
 
   // ── Tail lights ──
-  const tailMat = phong(C.carTail, { emissive: 0xaa0020, emissiveIntensity: 0.5 });
-  part(new THREE.BoxGeometry(0.40, 0.10, 0.06), tailMat, -0.60, 0.09, -1.97);
-  part(new THREE.BoxGeometry(0.40, 0.10, 0.06), tailMat,  0.60, 0.09, -1.97);
-  part(new THREE.BoxGeometry(1.30, 0.03, 0.04), tailMat, 0, 0.15, -1.97);
+  add(new THREE.BoxGeometry(0.46, 0.12, 0.08), emitR, -0.58, 0.20, -1.97);
+  add(new THREE.BoxGeometry(0.46, 0.12, 0.08), emitR,  0.58, 0.20, -1.97);
+  add(new THREE.BoxGeometry(1.36, 0.04, 0.06), emitR, 0, 0.30, -1.97);
+
+  // ── Dual exhausts ──
+  add(new THREE.CylinderGeometry(0.065, 0.065, 0.18, 8), chr, -0.34, -0.09, -1.97, Math.PI/2, 0, 0);
+  add(new THREE.CylinderGeometry(0.065, 0.065, 0.18, 8), chr,  0.34, -0.09, -1.97, Math.PI/2, 0, 0);
 
   // ── Spoiler ──
-  part(new THREE.BoxGeometry(1.60, 0.08, 0.30), flat(C.carDark),   0, 0.98, -1.75);
-  part(new THREE.BoxGeometry(0.08, 0.22, 0.30), flat(C.carDark), -0.78, 0.85, -1.75);
-  part(new THREE.BoxGeometry(0.08, 0.22, 0.30), flat(C.carDark),  0.78, 0.85, -1.75);
-
-  // ── Body stripe ──
-  part(new THREE.BoxGeometry(0.18, 0.02, 3.4), phong(0xffffff), 0, 0.2, 0);
+  add(new THREE.BoxGeometry(1.62, 0.09, 0.36), dark,  0, 1.04, -1.80);
+  add(new THREE.BoxGeometry(0.08, 0.26, 0.30), dark, -0.80, 0.88, -1.80);
+  add(new THREE.BoxGeometry(0.08, 0.26, 0.30), dark,  0.80, 0.88, -1.80);
 
   // ── Side mirrors ──
-  part(new THREE.BoxGeometry(0.22, 0.09, 0.14), flat(C.carDark), -0.98, 0.38, 0.8);
-  part(new THREE.BoxGeometry(0.22, 0.09, 0.14), flat(C.carDark),  0.98, 0.38, 0.8);
+  add(new THREE.BoxGeometry(0.24, 0.10, 0.16), dark, -0.96, 0.44,  0.92);
+  add(new THREE.BoxGeometry(0.24, 0.10, 0.16), dark,  0.96, 0.44,  0.92);
+  // Mirror stalk
+  add(new THREE.BoxGeometry(0.06, 0.09, 0.06), blk, -0.90, 0.39, 0.90);
+  add(new THREE.BoxGeometry(0.06, 0.09, 0.06), blk,  0.90, 0.39, 0.90);
 
-  return g;
+  // ── Roof antenna ──
+  add(new THREE.CylinderGeometry(0.015, 0.015, 0.45, 4), flat(0x555555), 0.50, 1.02, -0.60);
+
+  // ── Accent stripe ──
+  add(new THREE.BoxGeometry(0.20, 0.025, 3.70), phong(0xffffff, { shininess: 40 }), 0, 0.425, 0);
+
+  // ── Door handles ──
+  add(new THREE.BoxGeometry(0.18, 0.05, 0.04), chr, -0.89, 0.40, -0.10);
+  add(new THREE.BoxGeometry(0.18, 0.05, 0.04), chr,  0.89, 0.40, -0.10);
+
+  root.traverse(m => {
+    if ((m as THREE.Mesh).isMesh) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+    }
+  });
+  return root;
 }
 
 // ─── Detailed Wheel ───────────────────────────────────────────────────────────
-function makeWheelMesh() {
-  const g = new THREE.Group();
-  // Tire
-  const tire = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.36, 0.36, 0.28, 14),
-    flat(C.carTire)
-  );
-  tire.rotation.z = Math.PI / 2;
-  g.add(tire);
-  // Rim outer
-  const rimOut = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.26, 0.26, 0.30, 10),
-    phong(C.carRim, { shininess: 150 })
-  );
-  rimOut.rotation.z = Math.PI / 2;
-  g.add(rimOut);
-  // Rim center cap
-  const cap = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.07, 0.07, 0.32, 8),
-    flat(0xcccccc)
-  );
-  cap.rotation.z = Math.PI / 2;
-  g.add(cap);
-  // Spokes
+function makeWheel(mirrorX = false) {
+  const root = new THREE.Group();
+  if (mirrorX) root.scale.x = -1;
+
+  const add = (geo: THREE.BufferGeometry, mat: THREE.Material, x=0,y=0,z=0,rx=0,ry=0,rz=0) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x,y,z); m.rotation.set(rx,ry,rz); m.castShadow = true; root.add(m); return m;
+  };
+
+  // Tire (wide, slightly crowned)
+  add(new THREE.CylinderGeometry(0.36, 0.36, 0.30, 16), flat(0x111111), 0,0,0, 0,0,Math.PI/2);
+  // Tire sidewall detail
+  add(new THREE.TorusGeometry(0.34, 0.02, 6, 16), flat(0x222222), 0,0, 0.13);
+  add(new THREE.TorusGeometry(0.34, 0.02, 6, 16), flat(0x222222), 0,0,-0.13);
+
+  // Rim dish
+  add(new THREE.CylinderGeometry(0.27, 0.27, 0.28, 12), phong(C.carRim, { shininess: 180 }), 0,0,0, 0,0,Math.PI/2);
+  // Rim lip
+  add(new THREE.TorusGeometry(0.265, 0.025, 6, 16), phong(C.carChrome, { shininess: 220 }), 0,0, 0.14);
+
+  // 5 spokes
   for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const sx = Math.cos(a) * 0.14, sy = Math.sin(a) * 0.14;
     const spoke = new THREE.Mesh(
-      new THREE.BoxGeometry(0.30, 0.05, 0.04),
-      phong(C.carRim)
+      new THREE.BoxGeometry(0.055, 0.260, 0.05),
+      phong(C.carRim, { shininess: 160 })
     );
-    spoke.rotation.x = (i / 5) * Math.PI * 2;
-    spoke.position.y = Math.sin((i/5)*Math.PI*2)*0.13;
-    spoke.position.z = Math.cos((i/5)*Math.PI*2)*0.13;
-    g.add(spoke);
+    spoke.position.set(sy, sx, 0.06);
+    spoke.rotation.z = a;
+    root.add(spoke);
   }
-  g.traverse(m => { if ((m as THREE.Mesh).isMesh) m.castShadow = true; });
-  return g;
+
+  // Center cap
+  add(new THREE.CylinderGeometry(0.065, 0.065, 0.10, 8), phong(0xcccccc, { shininess: 200 }), 0,0,0.10, 0,0,Math.PI/2);
+  // Brake disc (visible through spokes)
+  add(new THREE.CylinderGeometry(0.19, 0.19, 0.04, 12), flat(0x555555), 0,0,-0.02, 0,0,Math.PI/2);
+  // Brake caliper
+  add(new THREE.BoxGeometry(0.08, 0.14, 0.08), flat(0xee4444), 0, 0.19, -0.02);
+
+  return root;
 }
 
 // ─── Tree ─────────────────────────────────────────────────────────────────────
-function makeTree(x: number, z: number, scale = 1, type = 0) {
+function makeTree(x: number, z: number, scale = 1.0, type = 0) {
   const g = new THREE.Group();
-  const trunkH = (0.7 + Math.random() * 0.4) * scale;
+  const trunkH = (0.6 + Math.random() * 0.5) * scale;
+
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.10 * scale, 0.15 * scale, trunkH, 6),
+    new THREE.CylinderGeometry(0.09*scale, 0.14*scale, trunkH, 7),
     flat(C.trunk)
   );
   trunk.position.y = trunkH / 2;
   g.add(trunk);
 
-  if (type === 1) {
-    // Round tree (oak-like)
-    const sphere = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.7 * scale, 1),
-      flat(C.leaf)
-    );
-    sphere.position.y = trunkH + 0.5 * scale;
-    sphere.scale.y = 0.85;
-    g.add(sphere);
-    const sphere2 = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.5 * scale, 1),
-      flat(C.leafDark)
-    );
-    sphere2.position.set(0.3 * scale, trunkH + 0.8 * scale, 0.2 * scale);
-    sphere2.scale.y = 0.85;
-    g.add(sphere2);
-  } else {
-    // Pine tree (cone stacks)
-    const layers = [
-      [0.75, 1.1, trunkH + 0.2],
-      [0.60, 0.95, trunkH + 0.9],
-      [0.44, 0.80, trunkH + 1.5],
-      [0.28, 0.65, trunkH + 2.0],
+  if (type === 0) {
+    // Pine — 4-layer cones
+    const layers: [number,number,number][] = [
+      [0.78, 1.10, trunkH + 0.10],
+      [0.64, 0.95, trunkH + 0.75],
+      [0.48, 0.82, trunkH + 1.35],
+      [0.30, 0.66, trunkH + 1.85],
     ];
-    layers.forEach(([r, h, y], i) => {
-      const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(r * scale, h * scale, 7),
-        flat(i % 2 === 0 ? C.leaf : C.leafMid)
+    layers.forEach(([r,h,y], i) => {
+      const c = new THREE.Mesh(
+        new THREE.ConeGeometry(r*scale, h*scale, 7),
+        flat(i%2===0 ? C.leaf : C.leafMid)
       );
-      cone.position.y = y * scale;
-      g.add(cone);
+      c.position.y = y*scale; g.add(c);
+    });
+  } else {
+    // Oak — multi-blob
+    const blobs: [number,number,number,number][] = [
+      [0, trunkH+0.55, 0, 0.72],
+      [-0.26, trunkH+0.78, 0.18, 0.52],
+      [ 0.28, trunkH+0.72,-0.16, 0.55],
+      [ 0.08, trunkH+1.05, 0.08, 0.45],
+    ];
+    blobs.forEach(([bx,by,bz,br], i) => {
+      const b = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(br*scale, 1),
+        flat(i%2===0 ? C.leaf : C.leafDark)
+      );
+      b.position.set(bx*scale, by*scale, bz*scale);
+      b.scale.y = 0.82; g.add(b);
     });
   }
 
   g.position.set(x, 0, z);
   g.rotation.y = Math.random() * Math.PI * 2;
-  g.traverse(m => { if ((m as THREE.Mesh).isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+  g.traverse(m => { const mm = m as THREE.Mesh; if (mm.isMesh) { mm.castShadow = true; mm.receiveShadow = true; } });
   return g;
 }
 
-// ─── Rock cluster ─────────────────────────────────────────────────────────────
-function makeRocks(x: number, z: number) {
+// ─── Rocks ────────────────────────────────────────────────────────────────────
+function makeRocks(x: number, z: number, n = 3) {
   const g = new THREE.Group();
-  const count = 2 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < count; i++) {
-    const geo = new THREE.DodecahedronGeometry(0.25 + Math.random() * 0.3, 0);
-    geo.rotateY(Math.random() * Math.PI);
-    geo.rotateX(Math.random() * 0.5);
-    const m = new THREE.Mesh(geo, flat(i % 2 ? C.rock : C.rockDark));
-    m.scale.y = 0.55 + Math.random() * 0.3;
-    m.position.set((Math.random()-0.5)*1.2, m.scale.y*0.3, (Math.random()-0.5)*1.2);
+  for (let i = 0; i < n; i++) {
+    const geo = new THREE.DodecahedronGeometry(0.22 + Math.random()*0.32, 0);
+    geo.rotateY(Math.random()*Math.PI); geo.rotateX(Math.random()*0.6);
+    const m = new THREE.Mesh(geo, flat(i%2 ? C.rock : C.rockDark));
+    m.scale.y = 0.5 + Math.random()*0.35;
+    m.position.set((Math.random()-0.5)*1.4, m.scale.y*0.25, (Math.random()-0.5)*1.4);
     m.castShadow = true;
     g.add(m);
   }
@@ -248,147 +282,149 @@ function makeRocks(x: number, z: number) {
   return g;
 }
 
-// ─── Sign ─────────────────────────────────────────────────────────────────────
-function makeSign(color: number, double = false) {
-  const g = new THREE.Group();
-  const postMat = flat(C.post);
-  const postH = 2.6;
-  if (double) {
-    [-0.9, 0.9].forEach(px => {
-      const p = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, postH, 6), postMat);
-      p.position.set(px, postH/2, 0); p.castShadow = true; g.add(p);
-    });
-  } else {
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, postH, 6), postMat);
-    p.position.y = postH/2; p.castShadow = true; g.add(p);
-  }
-  const border = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.0, 0.10), flat(C.sign));
-  border.position.y = postH + 0.1;
-  const board = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.82, 0.12), flat(color));
-  board.position.y = postH + 0.1;
-  board.position.z = 0.02;
-  g.add(border, board);
-  return g;
-}
-
 // ─── House ────────────────────────────────────────────────────────────────────
-function makeHouse(x: number, z: number, rot = 0) {
+function makeHouse(x: number, z: number, ry = 0) {
   const g = new THREE.Group();
-  const walls = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.8, 2.8), flat(0xf0d8b0));
-  walls.position.y = 0.9; walls.castShadow = true; walls.receiveShadow = true;
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.0, 1.2, 4), flat(0xc0502a));
-  roof.position.y = 2.4; roof.rotation.y = Math.PI/4; roof.castShadow = true;
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.12), flat(0x7a4a1a));
-  door.position.set(0, 0.45, 1.41);
-  const win1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.4, 0.08), flat(C.carGlass));
-  win1.position.set(-0.65, 0.95, 1.41);
-  const win2 = win1.clone(); win2.position.x = 0.65;
-  g.add(walls, roof, door, win1, win2);
+  // Walls
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.0, 3.0), flat(0xf0d8b0));
+  walls.position.y = 1.0; walls.castShadow = true; walls.receiveShadow = true; g.add(walls);
+  // Roof
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.3, 4), flat(0xb84820));
+  roof.position.y = 2.65; roof.rotation.y = Math.PI/4; roof.castShadow = true; g.add(roof);
+  // Chimney
+  const ch = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.80, 0.28), flat(0x886655));
+  ch.position.set(-0.7, 3.0, -0.5); ch.castShadow = true; g.add(ch);
+  // Door
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.0, 0.10), flat(0x6a3a18));
+  door.position.set(0, 0.5, 1.51); g.add(door);
+  const doorTop = new THREE.Mesh(new THREE.CylinderGeometry(0.275, 0.275, 0.10, 8, 1, false, 0, Math.PI), flat(0x6a3a18));
+  doorTop.position.set(0, 1.0, 1.51); doorTop.rotation.z = Math.PI/2; g.add(doorTop);
+  // Windows
+  for (const wx of [-0.72, 0.72]) {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.44, 0.10), flat(C.carGlass));
+    win.position.set(wx, 1.1, 1.51); g.add(win);
+    // Window cross
+    const bar1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.44, 0.12), flat(0xf0d8b0));
+    bar1.position.set(wx, 1.1, 1.51); g.add(bar1);
+    const bar2 = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.05, 0.12), flat(0xf0d8b0));
+    bar2.position.set(wx, 1.1, 1.51); g.add(bar2);
+  }
+  // Side window
+  const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.50, 0.60), flat(C.carGlass));
+  sideWin.position.set(1.31, 1.1, 0); g.add(sideWin);
+  // Steps
+  const step = new THREE.Mesh(new THREE.BoxGeometry(0.80, 0.12, 0.28), flat(0xccaa88));
+  step.position.set(0, 0.06, 1.65); g.add(step);
+
   g.position.set(x, 0, z);
-  g.rotation.y = rot;
+  g.rotation.y = ry;
   return g;
 }
 
 // ─── Lamp post ────────────────────────────────────────────────────────────────
 function makeLamp(x: number, z: number) {
   const g = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 4.5, 6), flat(0x888888));
-  pole.position.y = 2.25; pole.castShadow = true;
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.8), flat(0x888888));
-  arm.position.set(0.4, 4.45, 0);
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6),
-    new THREE.MeshPhongMaterial({ color: 0xffffaa, emissive: 0xffff88, emissiveIntensity: 1 }));
-  bulb.position.set(0.4, 4.3, 0);
-  g.add(pole, arm, bulb);
+  // Base
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.25, 8), flat(0x707070));
+  base.position.y = 0.12; g.add(base);
+  // Pole
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 4.8, 7), flat(0x888888));
+  pole.position.y = 2.65; pole.castShadow = true; g.add(pole);
+  // Curve arm
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.90), flat(0x888888));
+  arm.position.set(0.45, 5.1, 0); g.add(arm);
+  // Lamp head
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.15, 0.32), flat(0x666666));
+  head.position.set(0.45, 4.98, 0); g.add(head);
+  // Bulb glow
+  const bulb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.10, 8, 6),
+    new THREE.MeshPhongMaterial({ color: 0xffffcc, emissive: 0xffff88, emissiveIntensity: 1.5 })
+  );
+  bulb.position.set(0.45, 4.90, 0); g.add(bulb);
   g.position.set(x, 0, z);
   return g;
 }
 
-// ─── Fence segment ────────────────────────────────────────────────────────────
-function makeFenceLine(x1:number,z1:number,x2:number,z2:number,segments=8) {
+// ─── Sign post ────────────────────────────────────────────────────────────────
+function makeSign(color: number) {
   const g = new THREE.Group();
-  const dx = (x2-x1)/segments, dz = (z2-z1)/segments;
-  const angle = Math.atan2(dz, dx);
-  const len = Math.sqrt((x2-x1)**2+(z2-z1)**2)/segments;
-  for (let i = 0; i < segments; i++) {
-    const mx = x1 + dx*(i+0.5), mz = z1 + dz*(i+0.5);
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.8,0.08), flat(C.fence));
-    post.position.set(mx, 0.4, mz); g.add(post);
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(len*0.92,0.06,0.06), flat(C.fence));
-    rail.position.set(mx, 0.62, mz); rail.rotation.y = angle; g.add(rail);
-    const rail2 = rail.clone(); rail2.position.y = 0.28; g.add(rail2);
+  for (const px of [-1.0, 1.0]) {
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 3.0, 6), flat(C.post));
+    p.position.set(px, 1.5, 0); g.add(p);
   }
+  const back = new THREE.Mesh(new THREE.BoxGeometry(2.80, 1.05, 0.09), flat(C.sign));
+  back.position.y = 2.95; g.add(back);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(2.60, 0.86, 0.12), flat(color));
+  board.position.set(0, 2.95, 0.04); g.add(board);
+  // Border trim
+  const trim = new THREE.Mesh(new THREE.BoxGeometry(2.80, 0.10, 0.10), flat(C.post));
+  trim.position.y = 3.43; g.add(trim);
+  const trim2 = trim.clone(); trim2.position.y = 2.47; g.add(trim2);
+  return g;
+}
+
+// ─── Fence ────────────────────────────────────────────────────────────────────
+function makeFence(x1:number,z1:number,x2:number,z2:number,n=10) {
+  const g = new THREE.Group();
+  const dx=(x2-x1)/n, dz=(z2-z1)/n;
+  const ang = Math.atan2(dz,dx);
+  const segLen = Math.sqrt((x2-x1)**2+(z2-z1)**2)/n;
+  for (let i=0;i<n;i++) {
+    const mx=x1+dx*(i+0.5), mz=z1+dz*(i+0.5);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.09,0.95,0.09), flat(C.fence));
+    post.position.set(x1+dx*i, 0.47, z1+dz*i); g.add(post);
+    for (const ry2 of [0.66, 0.30]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(segLen*0.98,0.065,0.065), flat(C.fence));
+      rail.position.set(mx, ry2, mz); rail.rotation.y=ang; g.add(rail);
+    }
+  }
+  return g;
+}
+
+// ─── Cloud ────────────────────────────────────────────────────────────────────
+function makeCloud(x:number,y:number,z:number) {
+  const g = new THREE.Group();
+  const mat = flat(0xffffff, { transparent: true, opacity: 0.88 });
+  [[0,0,0,1.2],[1.4,0.2,0,0.9],[-1.3,0.1,0,0.85],[0.6,0.8,0,0.75],[-0.5,0.7,0,0.70]].forEach(([bx,by,bz,br]) => {
+    const b = new THREE.Mesh(new THREE.IcosahedronGeometry(br, 1), mat);
+    b.position.set(bx,by,bz); b.scale.y=0.62; g.add(b);
+  });
+  g.position.set(x,y,z);
   return g;
 }
 
 // ─── Zones ────────────────────────────────────────────────────────────────────
 type Zone = {
-  id: string; label: string; color: number;
-  pos: [number,number]; radius: number;
-  content: { title: string; role?: string; lines: string[]; emoji: string };
+  id: string; color: number; pos: [number,number]; radius: number;
+  content: { emoji: string; title: string; role?: string; lines: string[] };
 };
-
 const ZONES: Zone[] = [
-  {
-    id: "home", label: "HD", color: 0x89dceb,
-    pos: [0, 0], radius: 10,
-    content: {
-      emoji: "🏠",
-      title: "Harsh Dixit",
-      role: "Senior Cloud & DevOps Engineer",
-      lines: ["AWS SAA-C03 Certified","5+ years building cloud-native infra","Drive around to discover my world →"],
-    },
-  },
-  {
-    id: "about", label: "About Me", color: 0x6acf6a,
-    pos: [-32, -30], radius: 10,
-    content: {
-      emoji: "👨‍💻",
-      title: "About Me",
-      role: "Currently @ Caylent",
-      lines: ["I architect scalable cloud platforms","Terraform + AWS + Kubernetes enthusiast","Love automating everything that moves","Based in India · Open to remote work"],
-    },
-  },
-  {
-    id: "experience", label: "Experience", color: 0xcba6f7,
-    pos: [34, -24], radius: 10,
-    content: {
-      emoji: "💼",
-      title: "Experience",
-      role: "5+ Years in Industry",
-      lines: ["Caylent — Sr. DevOps Engineer","Accenture — Cloud Consultant","Platform engineering at scale","CI/CD · GitOps · IaC · Observability"],
-    },
-  },
-  {
-    id: "skills", label: "Skills", color: 0xf9e2af,
-    pos: [-30, 33], radius: 10,
-    content: {
-      emoji: "⚡",
-      title: "Tech Stack",
-      role: "Cloud · DevOps · Automation",
-      lines: ["AWS · GCP · Azure","Terraform · Ansible · Helm","Docker · Kubernetes · ArgoCD","Python · Bash · TypeScript · Go"],
-    },
-  },
-  {
-    id: "contact", label: "Contact", color: 0xf38ba8,
-    pos: [30, 36], radius: 10,
-    content: {
-      emoji: "📬",
-      title: "Say Hello",
-      role: "Let's build something great",
-      lines: ["harsh.dixit@caylent.com","github.com/harsh785","linkedin.com/in/harshdixit"],
-    },
-  },
+  { id:"home",       color:0x89dceb, pos:[0,0],      radius:9,
+    content:{ emoji:"🏠", title:"Harsh Dixit", role:"Senior Cloud & DevOps Engineer",
+      lines:["AWS SAA-C03 Certified","5+ yrs building cloud-native platforms","Explore the world to learn more →"] } },
+  { id:"about",      color:0x6acf6a, pos:[-34,-32],  radius:9,
+    content:{ emoji:"👨‍💻", title:"About Me", role:"Currently @ Caylent",
+      lines:["Architect of scalable cloud platforms","Terraform · AWS · Kubernetes fan","Love automating everything","Based in India · Open to remote"] } },
+  { id:"experience", color:0xcba6f7, pos:[36,-26],   radius:9,
+    content:{ emoji:"💼", title:"Experience", role:"5+ Years",
+      lines:["Caylent — Sr. DevOps Engineer","Accenture — Cloud Consultant","Platform engineering at scale","CI/CD · GitOps · IaC · Observability"] } },
+  { id:"skills",     color:0xf9e2af, pos:[-32,35],   radius:9,
+    content:{ emoji:"⚡", title:"Tech Stack", role:"Cloud · DevOps · Automation",
+      lines:["AWS · GCP · Azure","Terraform · Ansible · Helm","Docker · Kubernetes · ArgoCD","Python · Bash · TypeScript · Go"] } },
+  { id:"contact",    color:0xf38ba8, pos:[32,38],    radius:9,
+    content:{ emoji:"📬", title:"Say Hello", role:"Let's build something great",
+      lines:["harsh.dixit@caylent.com","github.com/harsh785","linkedin.com/in/harshdixit"] } },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function CyberCarGame() {
-  const mountRef  = useRef<HTMLDivElement>(null);
-  const keysRef   = useRef<Record<string, boolean>>({});
-  const [kmh, setKmh]         = useState(0);
-  const [zone, setZone]       = useState<Zone | null>(null);
+  const mountRef = useRef<HTMLDivElement>(null);
+  const keysRef  = useRef<Record<string, boolean>>({});
+  const [kmh,     setKmh]     = useState(0);
+  const [zone,    setZone]    = useState<Zone | null>(null);
   const [started, setStarted] = useState(false);
-  const [gear, setGear]       = useState("N");
+  const [gear,    setGear]    = useState("N");
 
   useEffect(() => {
     const el = mountRef.current;
@@ -402,42 +438,53 @@ export default function CyberCarGame() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.15;
     el.appendChild(renderer.domElement);
 
-    // ── Scene ──
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(C.sky);
-    scene.fog = new THREE.FogExp2(C.sky, 0.008);
+    scene.fog = new THREE.FogExp2(0x9dd4e8, 0.007);
 
-    // ── Sky gradient (simple quad) ──
-    const skyGeo = new THREE.SphereGeometry(120, 16, 8);
+    // ── Sky ──
+    const skyGeo = new THREE.SphereGeometry(140, 16, 8);
     skyGeo.scale(-1, 1, 1);
     const skyMat = new THREE.ShaderMaterial({
-      uniforms: { topColor: { value: new THREE.Color(0x5aaad8) }, botColor: { value: new THREE.Color(0xb8dff0) } },
-      vertexShader: `varying float h; void main(){ h = normalize(position).y; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-      fragmentShader: `uniform vec3 topColor,botColor; varying float h; void main(){ gl_FragColor = vec4(mix(botColor,topColor,max(h,0.)),1.); }`,
+      uniforms: {
+        top: { value: new THREE.Color(0x4a9ad4) },
+        bot: { value: new THREE.Color(0xb8e4f8) },
+      },
+      vertexShader: `varying float h; void main(){ h=normalize(position).y; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+      fragmentShader: `uniform vec3 top,bot; varying float h; void main(){ gl_FragColor=vec4(mix(bot,top,max(h,0.)),1.); }`,
       side: THREE.BackSide, depthWrite: false,
     });
     scene.add(new THREE.Mesh(skyGeo, skyMat));
 
+    // ── Clouds ──
+    [[-40,22,-10],[20,26,30],[-10,24,50],[55,20,-30],[0,28,-60],[-55,25,20]].forEach(([cx,cy,cz]) =>
+      scene.add(makeCloud(cx,cy,cz))
+    );
+
     // ── Lights ──
-    scene.add(new THREE.AmbientLight(0xb0d0f0, 0.6));
-    const hemi = new THREE.HemisphereLight(0x88c8f0, 0x88aa44, 1.0);
+    scene.add(new THREE.AmbientLight(0xaaccea, 0.55));
+    const hemi = new THREE.HemisphereLight(0x88c8f0, 0x88aa44, 0.9);
     scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xfff4d0, 2.2);
-    sun.position.set(40, 60, 30);
+    const sun = new THREE.DirectionalLight(0xfff6d0, 2.4);
+    sun.position.set(50, 70, 40);
     sun.castShadow = true;
     sun.shadow.mapSize.set(4096, 4096);
-    sun.shadow.camera.near = 1; sun.shadow.camera.far = 200;
-    sun.shadow.camera.left = sun.shadow.camera.bottom = -90;
-    sun.shadow.camera.right = sun.shadow.camera.top = 90;
-    sun.shadow.bias = -0.001;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 220;
+    sun.shadow.camera.left = sun.shadow.camera.bottom = -100;
+    sun.shadow.camera.right = sun.shadow.camera.top = 100;
+    sun.shadow.bias = -0.0008;
     scene.add(sun);
 
-    // ── Camera ──
-    const camera = new THREE.PerspectiveCamera(52, el.clientWidth / el.clientHeight, 0.1, 250);
-    camera.position.set(0, 10, 22);
+    // Fill light from opposite side
+    const fill = new THREE.DirectionalLight(0xc8e8ff, 0.4);
+    fill.position.set(-30, 20, -20);
+    scene.add(fill);
+
+    const camera = new THREE.PerspectiveCamera(52, el.clientWidth / el.clientHeight, 0.1, 260);
+    camera.position.set(0, 10, -22);
 
     // ── Physics ──
     const world = new CANNON.World();
@@ -446,153 +493,170 @@ export default function CyberCarGame() {
     world.allowSleep = false;
 
     // ── Ground ──
-    const groundGeo = new THREE.PlaneGeometry(250, 250, 50, 50);
-    // Gentle vertex displacement for terrain feel
-    const pos = groundGeo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i), z = pos.getZ(i);
-      const dist = Math.sqrt(x*x + z*z);
-      if (dist > 8) {
-        pos.setY(i, Math.sin(x*0.12)*0.4 + Math.cos(z*0.15)*0.3 + Math.sin(x*0.07+z*0.08)*0.5);
+    const groundGeo = new THREE.PlaneGeometry(260, 260, 64, 64);
+    const gPos = groundGeo.attributes.position;
+    for (let i = 0; i < gPos.count; i++) {
+      const gx = gPos.getX(i), gz = gPos.getZ(i);
+      const d = Math.sqrt(gx*gx + gz*gz);
+      if (d > 10) {
+        gPos.setY(i,
+          Math.sin(gx*0.10)*0.5 + Math.cos(gz*0.13)*0.4 +
+          Math.sin(gx*0.06 + gz*0.07)*0.6 +
+          Math.cos(gx*0.18 + gz*0.09)*0.25
+        );
       }
     }
     groundGeo.computeVertexNormals();
     const groundMesh = new THREE.Mesh(groundGeo, flat(C.ground));
-    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.rotation.x = -Math.PI/2;
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
 
-    // Ground physics (flat)
-    const groundBody = new CANNON.Body({ mass: 0 });
-    groundBody.addShape(new CANNON.Plane());
-    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-    world.addBody(groundBody);
+    const gBody = new CANNON.Body({ mass: 0 });
+    gBody.addShape(new CANNON.Plane());
+    gBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+    world.addBody(gBody);
 
-    // ── Roads ──
-    const addRoad = (x:number,z:number,w:number,d:number,rot=0) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w,0.03,d), flat(C.road));
-      m.position.set(x,0.02,z); m.rotation.y=rot; m.receiveShadow=true; scene.add(m);
-      // Center line
-      const line = new THREE.Mesh(new THREE.BoxGeometry(0.15,0.04,d*0.92), flat(C.roadLine));
-      line.position.set(x,0.04,z); line.rotation.y=rot; scene.add(line);
-    };
-    addRoad(0, 0, 7, 130);
-    addRoad(0, 0, 130, 7, Math.PI/2);
-    addRoad(-16, -31, 5, 20, 0.15);
-    addRoad(17, -24, 5, 22, -0.12);
-    addRoad(-15, 33, 5, 20, 0.1);
-    addRoad(15, 35, 5, 22, -0.1);
-
-    // ── Road dashes ──
-    for (let i = -60; i < 60; i += 6) {
-      const dash = new THREE.Mesh(new THREE.BoxGeometry(0.15,0.04,2.5), flat(C.roadLine));
-      dash.position.set(3.0, 0.04, i); scene.add(dash);
-      const dash2 = dash.clone(); dash2.position.set(-3.0, 0.04, i); scene.add(dash2);
+    // ── Grass patches (color variation) ──
+    for (let i = 0; i < 40; i++) {
+      const px = (Math.random()-0.5)*180, pz = (Math.random()-0.5)*180;
+      const patch = new THREE.Mesh(
+        new THREE.CircleGeometry(2+Math.random()*4, 7),
+        flat(Math.random()>0.5 ? C.groundAlt : C.hill)
+      );
+      patch.rotation.x = -Math.PI/2;
+      patch.position.set(px, 0.02, pz);
+      scene.add(patch);
     }
 
-    // ── Zone pads + signs ──
+    // ── Roads ──
+    const addRoad = (x:number,z:number,w:number,d:number,ry=0) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), flat(C.road));
+      m.position.set(x,0.02,z); m.rotation.y=ry; m.receiveShadow=true; scene.add(m);
+      // Center white line
+      const cl = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, d*0.96), flat(0xfafafa));
+      cl.position.set(x,0.05,z); cl.rotation.y=ry; scene.add(cl);
+      // Curbs
+      for (const side of [-1,1]) {
+        const curb = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.07, d), flat(0xcccccc));
+        const off = new THREE.Vector3(side*(w/2+0.10), 0.04, 0);
+        off.applyEuler(new THREE.Euler(0,ry,0));
+        curb.position.set(x+off.x, 0.04, z+off.z); curb.rotation.y=ry; scene.add(curb);
+      }
+    };
+    addRoad(0,   0,   7, 140);
+    addRoad(0,   0, 140,   7, Math.PI/2);
+    addRoad(-17,-33,  5,  22, 0.14);
+    addRoad( 18,-27,  5,  22,-0.12);
+    addRoad(-16, 34,  5,  22, 0.12);
+    addRoad( 16, 37,  5,  22,-0.14);
+
+    // Road dashes (side lanes)
+    for (let ri = -68; ri < 68; ri += 7) {
+      for (const sx of [-3.2, 3.2]) {
+        const d = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 3), flat(C.roadLine));
+        d.position.set(sx, 0.05, ri); scene.add(d);
+      }
+    }
+
+    // ── Zones ──
     for (const z of ZONES) {
-      const [zx, zz] = z.pos;
-      const hexColor = z.color;
-      const padMat = new THREE.MeshLambertMaterial({
-        color: hexColor, flatShading: true, transparent: true, opacity: 0.4
-      });
-      const pad = new THREE.Mesh(new THREE.CylinderGeometry(z.radius, z.radius, 0.06, 24), padMat);
-      pad.position.set(zx, 0.04, zz);
-      scene.add(pad);
-      // Ring border
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(z.radius, 0.12, 6, 28),
-        flat(hexColor)
+      const [zx,zz] = z.pos;
+      const hc = z.color;
+      // Pad
+      const pad = new THREE.Mesh(
+        new THREE.CylinderGeometry(z.radius, z.radius, 0.07, 28),
+        new THREE.MeshLambertMaterial({ color: hc, flatShading: true, transparent: true, opacity: 0.38 })
       );
-      ring.rotation.x = Math.PI/2; ring.position.set(zx, 0.08, zz);
-      scene.add(ring);
-      const sign = makeSign(hexColor, true);
-      sign.position.set(zx, 0, zz - z.radius + 1);
+      pad.position.set(zx, 0.04, zz); scene.add(pad);
+      // Torus ring
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(z.radius, 0.14, 6, 30), flat(hc));
+      ring.rotation.x = Math.PI/2; ring.position.set(zx, 0.09, zz); scene.add(ring);
+      // Sign
+      const sign = makeSign(hc);
+      sign.position.set(zx, 0, zz - z.radius + 1.2);
       scene.add(sign);
     }
 
     // ── Trees ──
-    const trees: [number,number,number,number][] = [
-      [-9,-9,0.9,0],[-13,4,1.1,1],[-5,16,0.8,0],[9,-11,1.0,1],[15,-5,0.9,0],[11,13,1.1,1],
-      [-7,-22,1.0,0],[-20,-11,1.2,1],[-24,6,0.8,0],[-16,22,0.9,1],[22,-16,1.1,0],[26,-6,0.9,1],
-      [23,11,1.0,0],[19,23,1.2,1],[-26,26,0.8,0],[-11,29,1.0,1],[11,27,0.9,0],[29,6,1.1,1],
-      [-31,11,1.0,0],[-9,36,0.9,1],[9,39,1.1,0],[40,-12,0.9,1],[37,6,1.2,0],[-39,-12,1.0,1],
-      [-37,4,0.9,0],[1,-40,1.1,1],[1,40,0.8,0],[41,22,1.0,1],[-41,22,0.9,0],[16,-37,1.1,1],
-      [-16,-37,1.0,0],[31,-37,0.9,1],[-31,37,1.1,0],[42,-32,0.8,1],[-42,-32,1.0,0],
-      [6,-14,0.8,1],[-6,-14,0.9,0],[18,0,1.0,1],[-18,0,0.9,0],[0,18,1.1,1],[0,-18,1.0,0],
+    const treeData: [number,number,number,number][] = [
+      [-9,-9,0.9,0],[-13,5,1.1,1],[-5,17,0.85,0],[10,-12,1.0,1],[16,-5,0.9,0],[12,14,1.1,1],
+      [-7,-24,1.0,0],[-21,-12,1.2,1],[-25,7,0.85,0],[-17,24,1.0,1],[24,-17,1.1,0],[27,-7,0.9,1],
+      [24,12,1.0,0],[20,25,1.15,1],[-28,28,0.85,0],[-12,30,1.0,1],[12,29,0.9,0],[30,7,1.1,1],
+      [-33,13,1.0,0],[-10,38,0.9,1],[10,40,1.1,0],[42,-14,1.0,1],[38,7,1.2,0],[-40,-14,1.0,1],
+      [-38,5,0.9,0],[2,-42,1.1,1],[2,42,0.85,0],[43,24,1.0,1],[-43,24,0.9,0],[17,-39,1.1,1],
+      [-17,-39,1.0,0],[33,-39,0.9,1],[-33,39,1.1,0],[44,-34,0.85,1],[-44,-34,1.0,0],
+      [7,-15,0.85,1],[-7,-15,0.90,0],[20,1,1.0,1],[-20,1,0.9,0],[1,20,1.1,1],[1,-20,1.0,0],
+      [46,0,1.2,1],[-46,0,1.1,0],[0,46,1.0,1],[0,-46,0.9,0],[48,14,0.9,1],[-48,14,1.0,0],
     ];
-    for (const [tx,tz,s,t] of trees) scene.add(makeTree(tx, tz, s, t));
+    for (const [tx,tz,s,t] of treeData) scene.add(makeTree(tx, tz, s, t));
 
     // ── Rocks ──
-    for (const [rx,rz] of [[-17,-17],[17,-19],[19,17],[-15,19],[23,-29],[29,23],[-25,29],[35,-20],[-35,-20]] as [number,number][])
-      scene.add(makeRocks(rx, rz));
+    [[-18,-18],[18,-20],[20,18],[-16,20],[24,-30],[30,24],[-26,30],[36,-22],[-36,-22],[10,-30],[-10,32]].forEach(([rx,rz]) =>
+      scene.add(makeRocks(rx as number, rz as number, 2+Math.floor(Math.random()*3)))
+    );
 
-    // ── Houses / structures ──
-    scene.add(makeHouse(-8, -32, 0.3));
-    scene.add(makeHouse( 8, -32,-0.3));
-    scene.add(makeHouse(-38, 14, 0.8));
-    scene.add(makeHouse( 38,-14,-0.8));
+    // ── Houses ──
+    scene.add(makeHouse(-10,-34, 0.3));
+    scene.add(makeHouse(  8,-34,-0.3));
+    scene.add(makeHouse(-40, 16, 0.8));
+    scene.add(makeHouse( 40,-16,-0.8));
+    scene.add(makeHouse(-40,-28, 1.4));
+    scene.add(makeHouse( 44, 10,-0.5));
 
-    // ── Lamp posts along main road ──
-    for (let z2 = -50; z2 <= 50; z2 += 12) {
-      scene.add(makeLamp( 4.5, z2));
-      scene.add(makeLamp(-4.5, z2));
+    // ── Lamp posts ──
+    for (let lz = -56; lz <= 56; lz += 10) {
+      scene.add(makeLamp( 4.6, lz));
+      scene.add(makeLamp(-4.6, lz));
     }
 
-    // ── Fences ──
-    scene.add(makeFenceLine(-65, -65, 65, -65));
-    scene.add(makeFenceLine( 65, -65, 65,  65));
-    scene.add(makeFenceLine( 65,  65,-65,  65));
-    scene.add(makeFenceLine(-65,  65,-65, -65));
-
-    // ── Hills (visual only — physics flat) ──
-    for (const [hx,hz,hr,hh] of [[-32,-30,8,5],[34,-24,8,5],[-30,33,8,5],[30,36,8,5]] as [number,number,number,number][]) {
-      const hill = new THREE.Mesh(new THREE.ConeGeometry(hr,hh,9), flat(C.hill));
-      hill.position.set(hx, hh/2-0.3, hz);
-      hill.castShadow = true; hill.receiveShadow = true;
-      scene.add(hill);
-      // Hill ring of trees
-      for (let a = 0; a < 6; a++) {
-        const ang = (a/6)*Math.PI*2;
-        scene.add(makeTree(hx+Math.cos(ang)*(hr-1), hz+Math.sin(ang)*(hr-1), 0.7, a%2));
+    // ── Hills with physics ──
+    for (const [hx,hz,hr,hh] of [[-34,-32,9,6],[36,-26,9,6],[-32,35,9,6],[32,38,9,6]] as [number,number,number,number][]) {
+      const hill = new THREE.Mesh(new THREE.ConeGeometry(hr, hh, 9), flat(C.hill));
+      hill.position.set(hx, hh/2-0.4, hz); hill.castShadow=true; hill.receiveShadow=true; scene.add(hill);
+      // trees ringing the hill
+      for (let a=0;a<6;a++) {
+        const ang=(a/6)*Math.PI*2;
+        scene.add(makeTree(hx+Math.cos(ang)*(hr-1.2), hz+Math.sin(ang)*(hr-1.2), 0.75, a%2));
       }
-      const hBody = new CANNON.Body({ mass: 0 });
-      hBody.addShape(new CANNON.Cylinder(0.1, hr, hh, 9));
-      hBody.position.set(hx, hh/2-0.3, hz);
+      const hBody=new CANNON.Body({mass:0});
+      hBody.addShape(new CANNON.Cylinder(0.1,hr,hh,9));
+      hBody.position.set(hx,hh/2-0.4,hz);
       world.addBody(hBody);
     }
 
     // ── Ramp ──
-    const rampMesh = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.3, 9), flat(C.road));
-    rampMesh.position.set(0, 0.85, -20); rampMesh.rotation.x = -0.18;
-    rampMesh.castShadow = true; rampMesh.receiveShadow = true;
-    scene.add(rampMesh);
-    const rampBody = new CANNON.Body({ mass: 0 });
-    rampBody.addShape(new CANNON.Box(new CANNON.Vec3(2.75, 0.15, 4.5)));
-    rampBody.position.set(0, 0.85, -20);
-    rampBody.quaternion.setFromEuler(-0.18, 0, 0);
-    world.addBody(rampBody);
+    const ramp = new THREE.Mesh(new THREE.BoxGeometry(5.5,0.3,9), flat(C.road));
+    ramp.position.set(0,0.90,-22); ramp.rotation.x=-0.17;
+    ramp.castShadow=true; ramp.receiveShadow=true; scene.add(ramp);
+    const rampB=new CANNON.Body({mass:0});
+    rampB.addShape(new CANNON.Box(new CANNON.Vec3(2.75,0.15,4.5)));
+    rampB.position.set(0,0.90,-22);
+    rampB.quaternion.setFromEuler(-0.17,0,0);
+    world.addBody(rampB);
 
     // ── Pond ──
-    const pond = new THREE.Mesh(new THREE.CircleGeometry(6, 16), flat(C.water));
-    pond.rotation.x = -Math.PI/2; pond.position.set(18, 0.06, 16);
-    scene.add(pond);
-    const pondEdge = new THREE.Mesh(new THREE.TorusGeometry(6, 0.2, 6, 18), flat(C.waterEdge));
-    pondEdge.rotation.x = Math.PI/2; pondEdge.position.set(18, 0.07, 16);
-    scene.add(pondEdge);
-    for (let a = 0; a < 5; a++) {
-      const ang = (a/5)*Math.PI*2;
-      scene.add(makeTree(18+Math.cos(ang)*7.5, 16+Math.sin(ang)*7.5, 0.8, 1));
-    }
+    const pond = new THREE.Mesh(new THREE.CircleGeometry(6,18), flat(C.water));
+    pond.rotation.x=-Math.PI/2; pond.position.set(18,0.07,18); scene.add(pond);
+    const pondRing = new THREE.Mesh(new THREE.TorusGeometry(6,0.22,6,20), flat(C.waterEdge));
+    pondRing.rotation.x=Math.PI/2; pondRing.position.set(18,0.09,18); scene.add(pondRing);
+    // Pond shores — sand
+    const shore = new THREE.Mesh(new THREE.CircleGeometry(7.5,18), flat(C.sand));
+    shore.rotation.x=-Math.PI/2; shore.position.set(18,0.03,18); scene.add(shore);
 
-    // ── Car physics ──
-    const chassisBody = new CANNON.Body({ mass: 140 });
-    chassisBody.addShape(new CANNON.Box(new CANNON.Vec3(0.86, 0.20, 1.88)));
-    chassisBody.position.set(0, 2, 12);
+    // ── Fences (world border) ──
+    scene.add(makeFence(-70,-70, 70,-70));
+    scene.add(makeFence( 70,-70, 70, 70));
+    scene.add(makeFence( 70, 70,-70, 70));
+    scene.add(makeFence(-70, 70,-70,-70));
+
+    // ── Car (physics: forward = +Z, engine force = +MAX for fwd) ──
+    const chassisBody = new CANNON.Body({ mass: 145 });
+    chassisBody.addShape(new CANNON.Box(new CANNON.Vec3(0.86, 0.20, 1.92)));
+    chassisBody.position.set(0, 2.0, -12); // start slightly behind origin, facing +Z
     chassisBody.allowSleep = false;
     chassisBody.linearDamping = 0.05;
-    chassisBody.angularDamping = 0.35;
+    chassisBody.angularDamping = 0.38;
     world.addBody(chassisBody);
 
     const vehicle = new CANNON.RaycastVehicle({
@@ -601,68 +665,57 @@ export default function CyberCarGame() {
 
     const wBase = {
       radius: 0.36,
-      directionLocal:  new CANNON.Vec3(0, -1, 0),
-      suspensionStiffness: 45,
-      suspensionRestLength: 0.32,
-      frictionSlip: 1.6,
-      dampingRelaxation: 2.4,
-      dampingCompression: 4.6,
+      directionLocal:   new CANNON.Vec3(0,-1,0),
+      suspensionStiffness: 42,
+      suspensionRestLength: 0.30,
+      frictionSlip: 1.65,
+      dampingRelaxation: 2.3,
+      dampingCompression: 4.4,
       maxSuspensionForce: 100000,
       rollInfluence: 0.005,
-      axleLocal: new CANNON.Vec3(1, 0, 0),
+      axleLocal: new CANNON.Vec3(1,0,0),
       chassisConnectionPointLocal: new CANNON.Vec3(0,0,0),
       maxSuspensionTravel: 0.28,
       useCustomSlidingRotationalSpeed: true,
       customSlidingRotationalSpeed: -30,
     };
-
-    const wheelDefs: [number,number,number][] = [
-      [-0.88, 0.05,  1.38],
-      [ 0.88, 0.05,  1.38],
-      [-0.88, 0.05, -1.38],
-      [ 0.88, 0.05, -1.38],
-    ];
-    wheelDefs.forEach(([x,y,z2]) => {
+    // Front wheels at +Z, rear at -Z (car faces +Z)
+    [[-0.88,0.05, 1.40],[0.88,0.05, 1.40],[-0.88,0.05,-1.40],[0.88,0.05,-1.40]].forEach(([x,y,z2]) => {
       vehicle.addWheel({ ...wBase, chassisConnectionPointLocal: new CANNON.Vec3(x,y,z2) });
     });
     vehicle.addToWorld(world);
 
-    // ── Visual car + wheels ──
+    // ── Car visuals ──
     const carMesh = makeCarMesh();
     scene.add(carMesh);
-    const wheelMeshes = wheelDefs.map(([x]) => {
-      const wm = makeWheelMesh();
-      if (x < 0) wm.scale.x = -1; // flip left wheels
-      scene.add(wm);
-      return wm;
-    });
+
+    // Wheels: front-left, front-right, rear-left, rear-right
+    const wheelMeshes = [false, true, false, true].map(mir => makeWheel(mir));
+    wheelMeshes.forEach(w => scene.add(w));
 
     // ── Input ──
-    const onKeyDown = (e: KeyboardEvent) => { keysRef.current[e.key] = true;  setStarted(true); };
-    const onKeyUp   = (e: KeyboardEvent) => { keysRef.current[e.key] = false; };
+    const onKeyDown = (e: KeyboardEvent) => { keysRef.current[e.key]=true;  setStarted(true); e.preventDefault(); };
+    const onKeyUp   = (e: KeyboardEvent) => { keysRef.current[e.key]=false; };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup",   onKeyUp);
 
-    // ── Resize ──
     const onResize = () => {
-      if (!el) return;
       camera.aspect = el.clientWidth / el.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(el.clientWidth, el.clientHeight);
     };
     window.addEventListener("resize", onResize);
 
-    // ── Game loop ──
-    const FIXED = 1 / 60;
-    const MAX_FORCE = 1400;
-    const MAX_STEER = 0.44;
-    const BRAKE_F   = 25;
+    // ── Loop ──
+    const FIXED = 1/60;
+    const MAX_F = 1500;
+    const MAX_S = 0.46;
+    const BRAKE = 28;
 
-    const camOffset = new THREE.Vector3(0, 8, 16);
+    // Camera state
+    const camPos    = new THREE.Vector3(0, 10, -22);
     const camLookAt = new THREE.Vector3();
-    const camCurrent = new THREE.Vector3(0, 10, 22);
-    let lastTime = -1;
-    let frameId: number;
+    let lastTime = -1, frameId = 0;
 
     const loop = (t: number) => {
       frameId = requestAnimationFrame(loop);
@@ -671,32 +724,31 @@ export default function CyberCarGame() {
       lastTime = t;
 
       const k = keysRef.current;
-      const fwd   = k["w"] || k["W"] || k["ArrowUp"];
-      const back  = k["s"] || k["S"] || k["ArrowDown"];
-      const left  = k["a"] || k["A"] || k["ArrowLeft"];
-      const right = k["d"] || k["D"] || k["ArrowRight"];
-      const brake = k[" "] || k["Shift"];
+      const fwd   = !!(k["w"]||k["W"]||k["ArrowUp"]);
+      const back  = !!(k["s"]||k["S"]||k["ArrowDown"]);
+      const left  = !!(k["a"]||k["A"]||k["ArrowLeft"]);
+      const right = !!(k["d"]||k["D"]||k["ArrowRight"]);
+      const brake = !!(k[" "]||k["Shift"]);
 
       const vel = chassisBody.velocity;
       const spd = Math.sqrt(vel.x**2 + vel.z**2);
-      const speedKmh = Math.round(spd * 3.6);
-      setKmh(speedKmh);
 
-      // Speed-dependent steering
-      const steerAmt = MAX_STEER * Math.max(0.3, 1 - spd * 0.03);
-      const engineForce = fwd ? -MAX_FORCE : back ? MAX_FORCE * 0.55 : 0;
+      // Engine: forward = positive force in +Z axis
+      const engineF = fwd ? MAX_F : back ? -MAX_F*0.55 : 0;
+      // Speed-sensitive steering
+      const steerAmt = MAX_S * Math.max(0.25, 1.0 - spd*0.028);
       const steer = left ? steerAmt : right ? -steerAmt : 0;
-      const rollResist = (!fwd && !back) ? 8 : 0;
+      const rollR = (!fwd && !back) ? 6 : 0;
 
-      vehicle.applyEngineForce(engineForce, 2);
-      vehicle.applyEngineForce(engineForce, 3);
+      vehicle.applyEngineForce(engineF, 2);
+      vehicle.applyEngineForce(engineF, 3);
       vehicle.setSteeringValue(steer, 0);
       vehicle.setSteeringValue(steer, 1);
-      for (let i = 0; i < 4; i++) vehicle.setBrake(brake ? BRAKE_F : rollResist, i);
+      for (let i=0;i<4;i++) vehicle.setBrake(brake ? BRAKE : rollR, i);
 
       world.step(FIXED, dt, 3);
 
-      // Sync car mesh
+      // Sync car
       const cp = chassisBody.position;
       const cq = chassisBody.quaternion;
       carMesh.position.set(cp.x, cp.y, cp.z);
@@ -710,25 +762,31 @@ export default function CyberCarGame() {
         wheelMeshes[i].quaternion.set(wt.quaternion.x, wt.quaternion.y, wt.quaternion.z, wt.quaternion.w);
       });
 
-      // Camera — smooth follow behind car
-      const carQuat = new THREE.Quaternion(cq.x, cq.y, cq.z, cq.w);
-      const behind = camOffset.clone().applyQuaternion(carQuat);
-      const targetPos = new THREE.Vector3(cp.x + behind.x, cp.y + behind.y, cp.z + behind.z);
-      camCurrent.lerp(targetPos, 0.07);
-      camera.position.copy(camCurrent);
-      camLookAt.set(cp.x, cp.y + 0.8, cp.z);
+      // ── Camera: follow behind car in its local -Z direction ──
+      // Car's forward in world space = quaternion applied to (0,0,1)
+      const carQuat  = new THREE.Quaternion(cq.x, cq.y, cq.z, cq.w);
+      const forward  = new THREE.Vector3(0, 0, 1).applyQuaternion(carQuat);
+      // Camera sits behind (-forward) and above
+      const pullback = 13 + spd * 0.28; // pull back more at speed
+      const targetCam = new THREE.Vector3(
+        cp.x - forward.x * pullback,
+        cp.y + 7.5,
+        cp.z - forward.z * pullback
+      );
+      camPos.lerp(targetCam, 0.065);
+      camera.position.copy(camPos);
+      camLookAt.set(cp.x + forward.x*2, cp.y + 0.9, cp.z + forward.z*2);
       camera.lookAt(camLookAt);
 
-      // Gear display
-      if (fwd) setGear("D");
-      else if (back) setGear("R");
-      else setGear(speedKmh > 2 ? "D" : "N");
+      // HUD
+      const kmh2 = Math.round(spd * 3.6);
+      setKmh(kmh2);
+      setGear(fwd ? "D" : back ? "R" : kmh2 > 2 ? "D" : "N");
 
-      // Zone proximity
-      const cx = cp.x, cz = cp.z;
+      // Zone check
       let nearest: Zone | null = null;
       for (const z of ZONES) {
-        const dx = cx - z.pos[0], dz = cz - z.pos[1];
+        const dx = cp.x - z.pos[0], dz = cp.z - z.pos[1];
         if (Math.sqrt(dx*dx+dz*dz) < z.radius) { nearest = z; break; }
       }
       setZone(nearest);
@@ -747,142 +805,135 @@ export default function CyberCarGame() {
     };
   }, []);
 
-  const press   = (key: string) => { keysRef.current[key] = true;  setStarted(true); };
-  const release = (key: string) => { keysRef.current[key] = false; };
+  const press   = (k: string) => { keysRef.current[k]=true;  setStarted(true); };
+  const release = (k: string) => { keysRef.current[k]=false; };
 
-  const zoneHex = zone ? `#${zone.color.toString(16).padStart(6,"0")}` : "#fff";
+  const zHex = zone ? `#${zone.color.toString(16).padStart(6,"0")}` : "#fff";
 
   return (
-    <div style={{ width:"100vw", height:"100vh", position:"relative", overflow:"hidden", background:`#${C.sky.toString(16)}` }}>
+    <div style={{ width:"100vw", height:"100vh", position:"relative", overflow:"hidden" }}>
       <div ref={mountRef} style={{ width:"100%", height:"100%" }} />
 
-      {/* ── Back link ── */}
+      {/* Back */}
       <Link href="/" style={{
         position:"absolute", top:16, left:16,
-        background:"rgba(255,255,255,0.9)", color:"#1a1a2e",
-        padding:"7px 16px", borderRadius:24, fontFamily:"sans-serif",
+        background:"rgba(255,255,255,0.92)", color:"#111",
+        padding:"8px 18px", borderRadius:28, fontFamily:"system-ui,sans-serif",
         fontSize:13, fontWeight:700, textDecoration:"none",
-        backdropFilter:"blur(8px)", boxShadow:"0 2px 16px rgba(0,0,0,0.18)",
-        display:"flex", alignItems:"center", gap:7, letterSpacing:"0.02em",
+        boxShadow:"0 2px 20px rgba(0,0,0,0.18)", backdropFilter:"blur(10px)",
+        display:"flex", alignItems:"center", gap:7,
       }}>← Portfolio</Link>
 
-      {/* ── Speedometer ── */}
+      {/* Speedometer */}
       <div style={{
         position:"absolute", bottom:24, left:24,
-        background:"rgba(20,20,30,0.82)", borderRadius:20,
-        padding:"14px 22px", fontFamily:"'Segoe UI',sans-serif",
-        boxShadow:"0 4px 32px rgba(0,0,0,0.35)", backdropFilter:"blur(12px)",
-        border:"1px solid rgba(255,255,255,0.12)",
+        background:"rgba(14,14,22,0.85)", borderRadius:22,
+        padding:"14px 24px", fontFamily:"system-ui,sans-serif",
+        boxShadow:"0 4px 36px rgba(0,0,0,0.4)", backdropFilter:"blur(14px)",
+        border:"1px solid rgba(255,255,255,0.10)",
       }}>
-        <div style={{ fontSize:38, fontWeight:900, color:"#fff", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
-          {kmh}<span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.5)", marginLeft:4 }}>km/h</span>
+        <div style={{ fontSize:42, fontWeight:900, color:"#fff", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+          {kmh}<span style={{ fontSize:14, fontWeight:500, color:"rgba(255,255,255,0.45)", marginLeft:5 }}>km/h</span>
         </div>
-        <div style={{ display:"flex", gap:10, marginTop:8, alignItems:"center" }}>
+        <div style={{ display:"flex", gap:8, marginTop:10 }}>
           {["P","R","N","D"].map(g2 => (
             <span key={g2} style={{
-              fontSize:12, fontWeight:800, color: gear===g2 ? "#fff" : "rgba(255,255,255,0.25)",
-              background: gear===g2 ? "#e63946" : "transparent",
-              padding:"1px 6px", borderRadius:4, transition:"all 0.15s",
+              fontSize:12, fontWeight:800, letterSpacing:"0.04em",
+              color: gear===g2 ? "#fff" : "rgba(255,255,255,0.22)",
+              background: gear===g2 ? "#ff2d2d" : "rgba(255,255,255,0.06)",
+              padding:"3px 8px", borderRadius:6, transition:"all 0.15s ease",
             }}>{g2}</span>
           ))}
         </div>
-        <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", marginTop:6, letterSpacing:"0.05em" }}>
-          WASD · SPACE brake
+        <div style={{ fontSize:11, color:"rgba(255,255,255,0.28)", marginTop:8, letterSpacing:"0.06em" }}>
+          WASD · ARROWS · SPACE
         </div>
       </div>
 
-      {/* ── Zone info panel ── */}
+      {/* Zone panel */}
       {zone && (
         <div key={zone.id} style={{
-          position:"absolute", top:16, right:16, width:292,
-          background:"rgba(255,255,255,0.95)", borderRadius:20,
-          padding:"20px 24px", fontFamily:"'Segoe UI',sans-serif",
-          boxShadow:"0 8px 40px rgba(0,0,0,0.22)", backdropFilter:"blur(12px)",
-          borderLeft:`5px solid ${zoneHex}`,
-          animation:"slideIn 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+          position:"absolute", top:16, right:16, width:300,
+          background:"rgba(255,255,255,0.97)", borderRadius:22,
+          padding:"22px 26px", fontFamily:"system-ui,sans-serif",
+          boxShadow:"0 10px 50px rgba(0,0,0,0.22)", backdropFilter:"blur(14px)",
+          borderLeft:`5px solid ${zHex}`,
+          animation:"slideIn 0.25s cubic-bezier(0.34,1.56,0.64,1)",
         }}>
-          <div style={{ fontSize:28, marginBottom:8 }}>{zone.content.emoji}</div>
-          <div style={{ fontSize:18, fontWeight:800, color:"#111", marginBottom:2 }}>
+          <div style={{ fontSize:34, marginBottom:10 }}>{zone.content.emoji}</div>
+          <div style={{ fontSize:20, fontWeight:900, color:"#111", marginBottom:3 }}>
             {zone.content.title}
           </div>
           {zone.content.role && (
-            <div style={{ fontSize:12, color:zoneHex, fontWeight:700, marginBottom:12, letterSpacing:"0.04em" }}>
+            <div style={{ fontSize:12, fontWeight:700, color:zHex, marginBottom:14, letterSpacing:"0.05em", textTransform:"uppercase" }}>
               {zone.content.role}
             </div>
           )}
-          <div style={{ width:32, height:2, background:zoneHex, borderRadius:2, marginBottom:12 }} />
+          <div style={{ width:36, height:3, background:zHex, borderRadius:3, marginBottom:14 }} />
           {zone.content.lines.map((l,i) => (
-            <div key={i} style={{ fontSize:13, color:"#444", marginBottom:6, lineHeight:1.55, display:"flex", alignItems:"center", gap:7 }}>
-              <span style={{ color:zoneHex, fontSize:8 }}>●</span>{l}
+            <div key={i} style={{ fontSize:13.5, color:"#444", marginBottom:8, lineHeight:1.5, display:"flex", gap:10, alignItems:"center" }}>
+              <span style={{ color:zHex, fontSize:9, flexShrink:0 }}>◆</span>{l}
             </div>
           ))}
         </div>
       )}
 
-      {/* ── Start hint ── */}
+      {/* Start hint */}
       {!started && (
         <div style={{
           position:"absolute", top:"50%", left:"50%",
           transform:"translate(-50%,-50%)",
-          background:"rgba(255,255,255,0.95)", borderRadius:24,
-          padding:"28px 44px", textAlign:"center",
-          fontFamily:"'Segoe UI',sans-serif",
-          boxShadow:"0 12px 50px rgba(0,0,0,0.25)",
-          backdropFilter:"blur(12px)", pointerEvents:"none",
-          animation:"fadeIn 0.4s ease",
+          background:"rgba(255,255,255,0.96)", borderRadius:28,
+          padding:"32px 52px", textAlign:"center",
+          fontFamily:"system-ui,sans-serif",
+          boxShadow:"0 16px 60px rgba(0,0,0,0.28)",
+          backdropFilter:"blur(16px)", pointerEvents:"none",
         }}>
-          <div style={{ fontSize:44, marginBottom:10 }}>🚗</div>
-          <div style={{ fontSize:22, fontWeight:900, color:"#111", marginBottom:6 }}>
-            Harsh's World
-          </div>
-          <div style={{ fontSize:14, color:"#666", lineHeight:1.7 }}>
+          <div style={{ fontSize:52, marginBottom:12 }}>🚗</div>
+          <div style={{ fontSize:24, fontWeight:900, color:"#111", marginBottom:8 }}>Harsh's World</div>
+          <div style={{ fontSize:14, color:"#555", lineHeight:1.9 }}>
             Drive around to explore my portfolio<br/>
-            <strong style={{ color:"#333" }}>WASD</strong> or <strong style={{ color:"#333" }}>↑↓←→</strong> to drive &nbsp;·&nbsp; <strong style={{ color:"#333" }}>Space</strong> to brake<br/>
-            Find the <span style={{ color:"#e63946" }}>colored zones</span> to discover more
+            <strong>WASD</strong> or <strong>↑↓←→</strong> to steer &nbsp;·&nbsp; <strong>Space</strong> to brake<br/>
+            Find the <span style={{ color:"#ff2d2d", fontWeight:700 }}>colored zones</span> to learn more
           </div>
         </div>
       )}
 
-      {/* ── Mobile D-pad ── */}
+      {/* Mobile D-pad */}
       <div style={{
         position:"absolute", bottom:20, right:20,
-        display:"grid", gridTemplateColumns:"52px 52px 52px",
-        gridTemplateRows:"52px 52px 52px", gap:5,
+        display:"grid", gridTemplateColumns:"56px 56px 56px",
+        gridTemplateRows:"56px 56px 56px", gap:5,
       }}>
         {[
-          { key:"ArrowUp",   label:"▲", col:2, row:1 },
-          { key:"ArrowLeft", label:"◄", col:1, row:2 },
-          { key:" ",         label:"■", col:2, row:2 },
-          { key:"ArrowRight",label:"►", col:3, row:2 },
-          { key:"ArrowDown", label:"▼", col:2, row:3 },
+          { k:"ArrowUp",    l:"▲", c:2, r:1 },
+          { k:"ArrowLeft",  l:"◄", c:1, r:2 },
+          { k:" ",          l:"■", c:2, r:2 },
+          { k:"ArrowRight", l:"►", c:3, r:2 },
+          { k:"ArrowDown",  l:"▼", c:2, r:3 },
         ].map(b => (
-          <button key={b.key}
-            onPointerDown={() => press(b.key)}
-            onPointerUp={() => release(b.key)}
-            onPointerLeave={() => release(b.key)}
+          <button key={b.k}
+            onPointerDown={() => press(b.k)}
+            onPointerUp={() => release(b.k)}
+            onPointerLeave={() => release(b.k)}
             style={{
-              gridColumn:b.col, gridRow:b.row,
-              background:"rgba(255,255,255,0.88)",
-              border:"1.5px solid rgba(0,0,0,0.08)",
-              borderRadius:12, fontSize:18, cursor:"pointer",
-              backdropFilter:"blur(8px)",
-              boxShadow:"0 3px 12px rgba(0,0,0,0.18)",
+              gridColumn:b.c, gridRow:b.r,
+              background:"rgba(255,255,255,0.90)",
+              border:"1.5px solid rgba(0,0,0,0.08)", borderRadius:14,
+              fontSize:18, cursor:"pointer",
+              boxShadow:"0 3px 14px rgba(0,0,0,0.2)",
               display:"flex", alignItems:"center", justifyContent:"center",
               touchAction:"none", userSelect:"none",
-              color: b.key===" " ? "#e63946" : "#333",
+              color: b.k===" " ? "#ff2d2d" : "#222",
             }}
-          >{b.label}</button>
+          >{b.l}</button>
         ))}
       </div>
 
       <style>{`
         @keyframes slideIn {
-          from { opacity:0; transform:translateX(24px) scale(0.96); }
-          to   { opacity:1; transform:translateX(0)   scale(1); }
-        }
-        @keyframes fadeIn {
-          from { opacity:0; transform:translate(-50%,-48%); }
-          to   { opacity:1; transform:translate(-50%,-50%); }
+          from { opacity:0; transform:translateX(28px) scale(0.94); }
+          to   { opacity:1; transform:translateX(0) scale(1); }
         }
       `}</style>
     </div>

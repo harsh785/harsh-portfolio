@@ -111,11 +111,13 @@ export default function InteractiveTerminal() {
   const [input, setInput] = useState("");
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const body = bodyRef.current;
+    if (!body) return;
+    body.scrollTop = body.scrollHeight;
   }, [history]);
 
   const run = (cmd: string) => {
@@ -192,6 +194,7 @@ export default function InteractiveTerminal() {
 
           {/* Body */}
           <div
+            ref={bodyRef}
             className="glass p-5 h-80 overflow-y-auto font-mono text-sm"
             onWheel={(e) => e.stopPropagation()}
           >
@@ -219,7 +222,6 @@ export default function InteractiveTerminal() {
                 spellCheck={false}
               />
             </div>
-            <div ref={bottomRef} />
           </div>
         </motion.div>
 

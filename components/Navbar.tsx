@@ -52,7 +52,7 @@ export default function Navbar() {
               </button>
             ))}
             <a
-              href="/resume.pdf"
+              href="/harsh-portfolio/resume.pdf"
               target="_blank"
               className="text-sm px-4 py-2 rounded-lg border border-[#89dceb]/40 text-[#89dceb] hover:bg-[#89dceb]/10 transition-all duration-200 font-medium"
             >

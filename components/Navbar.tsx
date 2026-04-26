@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Gamepad2 } from "lucide-react";
 import GameSection from "./GameSection";
+import ThemeToggle from "./ThemeToggle";
 
 const links = ["About", "Experience", "Skills", "Achievements", "Contact"];
 
@@ -70,6 +71,7 @@ export default function Navbar() {
             >
               Resume
             </a>
+            <ThemeToggle />
           </div>
 
           <button
@@ -104,6 +106,7 @@ export default function Navbar() {
             >
               <Gamepad2 size={22} /> Game
             </button>
+            <ThemeToggle />
           </motion.div>
         )}
       </AnimatePresence>

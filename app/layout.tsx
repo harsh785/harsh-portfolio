@@ -15,14 +15,29 @@ export const metadata: Metadata = {
   keywords: ["DevOps", "Cloud Engineer", "AWS", "Terraform", "Kubernetes", "Harsh Dixit"],
 };
 
+/* Injected before React hydrates — prevents flash of wrong theme */
+const themeScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('theme');
+    document.documentElement.classList.add(t === 'light' ? 'light' : 'dark');
+  } catch(e) {
+    document.documentElement.classList.add('dark');
+  }
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} h-full`} style={{ colorScheme: "dark" }}>
-      <body className={`min-h-full antialiased bg-[#0d0d14] text-slate-200 ${jetbrainsMono.className}`}>
+    <html lang="en" className={jetbrainsMono.variable} style={{ colorScheme: "dark" }} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`min-h-full antialiased ${jetbrainsMono.className}`} suppressHydrationWarning>
         {children}
       </body>
     </html>

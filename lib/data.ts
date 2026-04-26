@@ -113,11 +113,50 @@ export const achievements = [
   {
     title: "$5,000 AWS Credits Secured",
     description: "Helped client Hero Vired obtain free $5,000 in AWS credits, enabling accelerated cloud adoption.",
+    rarity: "EPIC",
+    icon: "💰",
   },
   {
-    title: "$1,300 Dispute Resolved",
-    description: "Successfully resolved a dispute charge with AWS, saving the company $1,300. Received commendations from the client.",
+    title: "$1,300 AWS Dispute Resolved",
+    description: "Successfully resolved a dispute charge with AWS, saving the company $1,300. Received client commendations.",
+    rarity: "RARE",
+    icon: "🏆",
   },
+  {
+    title: "Sole DevOps — Full Lifecycle",
+    description: "Owned the entire DevOps lifecycle solo at Hudle — CI/CD, monitoring, cost, security, and infra — for a fast-growing sports-tech startup.",
+    rarity: "LEGENDARY",
+    icon: "⚡",
+  },
+  {
+    title: "SOC2 Compliance Achieved",
+    description: "Enabled AWS Security Hub with CIS & FSBP standards across all environments at Caylent, meeting SOC2 requirements.",
+    rarity: "EPIC",
+    icon: "🛡️",
+  },
+  {
+    title: "Zero-Downtime Deployments",
+    description: "Maintained 99.9% uptime across production environments using rolling deployments, health checks, and automated rollback pipelines.",
+    rarity: "RARE",
+    icon: "🚀",
+  },
+  {
+    title: "Observability Stack Built from Scratch",
+    description: "Designed and deployed full Prometheus + Grafana + ELK observability stack, giving engineering teams real-time visibility into production.",
+    rarity: "RARE",
+    icon: "📊",
+  },
+];
+
+export const careerStats = [
+  { label: "Years Experience",   value: 5,    suffix: "+",  prefix: "",  icon: "⚡", color: "#00d4ff" },
+  { label: "AWS Credits Secured",value: 5000, suffix: "",   prefix: "$", icon: "💰", color: "#10b981" },
+  { label: "AWS Dispute Saved",  value: 1300, suffix: "",   prefix: "$", icon: "🏆", color: "#FF9900" },
+  { label: "Pipelines Built",    value: 50,   suffix: "+",  prefix: "",  icon: "⚙️", color: "#7c3aed" },
+  { label: "Prod Uptime",        value: 99,   suffix: ".9%", prefix: "", icon: "📡", color: "#39ff14" },
+  { label: "AWS Services Used",  value: 20,   suffix: "+",  prefix: "",  icon: "☁️", color: "#f59e0b" },
+  { label: "K8s Clusters",       value: 10,   suffix: "+",  prefix: "",  icon: "⎈", color: "#326ce5" },
+  { label: "Companies Served",   value: 4,    suffix: "",   prefix: "",  icon: "🏢", color: "#e05" },
 ];
 
 export const education = {

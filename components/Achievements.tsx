@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
-import { Trophy, GraduationCap, Star, DollarSign, Users, Zap } from "lucide-react";
-import { achievements, certifications, education } from "@/lib/data";
+import { motion, useInView } from "framer-motion";
+import { Trophy, GraduationCap, Star } from "lucide-react";
+import { achievements, certifications, education, careerStats } from "@/lib/data";
+import TiltCard from "./TiltCard";
 
 // ── Animated counter ──────────────────────────────────────────────────────────
 function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
@@ -13,9 +14,8 @@ function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?
   useEffect(() => {
     if (!inView) return;
     let start = 0;
-    const duration = 1800;
     const step = 16;
-    const increment = target / (duration / step);
+    const increment = target / (1800 / step);
     const timer = setInterval(() => {
       start += increment;
       if (start >= target) { setCount(target); clearInterval(timer); }
@@ -27,16 +27,105 @@ function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?
   return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
 }
 
-// ── 3-D flip cert card ────────────────────────────────────────────────────────
-function CertCard() {
-  const [flipped, setFlipped] = useState(false);
+// ── Rarity config ─────────────────────────────────────────────────────────────
+const rarityConfig: Record<string, { color: string; bg: string; stars: number }> = {
+  LEGENDARY: { color: "#FF9900", bg: "#FF990015", stars: 3 },
+  EPIC:      { color: "#7c3aed", bg: "#7c3aed15", stars: 2 },
+  RARE:      { color: "#00d4ff", bg: "#00d4ff10", stars: 1 },
+};
+
+// ── Achievement card ──────────────────────────────────────────────────────────
+function AchievementCard({ ach, index }: { ach: typeof achievements[0]; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const [unlocked, setUnlocked] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const cfg = rarityConfig[ach.rarity] ?? rarityConfig.RARE;
+
+  useEffect(() => {
+    if (inView && !unlocked) {
+      const t = setTimeout(() => {
+        setUnlocked(true);
+        setFlash(true);
+        setTimeout(() => setFlash(false), 500);
+      }, index * 120 + 150);
+      return () => clearTimeout(t);
+    }
+  }, [inView, unlocked, index]);
 
   return (
-    <div
-      className="relative w-full h-56 cursor-pointer"
-      style={{ perspective: 1000 }}
-      onClick={() => setFlipped((f) => !f)}
-    >
+    <div ref={ref}>
+      <TiltCard intensity={8}>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={unlocked ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="relative rounded-2xl p-5 border overflow-hidden h-full"
+          style={{
+            background: flash ? `${cfg.color}20` : cfg.bg,
+            borderColor: `${cfg.color}25`,
+            transition: "background 0.4s ease",
+          }}
+        >
+          {/* Flash overlay */}
+          {flash && (
+            <motion.div
+              initial={{ opacity: 0.6 }} animate={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{ background: `radial-gradient(ellipse, ${cfg.color}50, transparent)` }}
+            />
+          )}
+
+          {/* Top row */}
+          <div className="flex items-start justify-between mb-3">
+            <motion.span
+              className="text-2xl"
+              animate={unlocked ? { rotate: [0, -12, 12, -6, 0], scale: [1, 1.3, 1] } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              {ach.icon}
+            </motion.span>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: cfg.stars }).map((_, i) => (
+                <Star key={i} size={10} style={{ color: cfg.color }} fill={cfg.color} />
+              ))}
+              <span className="text-xs font-bold font-mono ml-1" style={{ color: cfg.color }}>
+                {ach.rarity}
+              </span>
+            </div>
+          </div>
+
+          <h4 className="text-white font-bold text-sm mb-1.5 leading-snug">{ach.title}</h4>
+          <p className="text-slate-400 text-xs leading-relaxed mb-4">{ach.description}</p>
+
+          {/* Unlock bar */}
+          <div className="flex items-center gap-2 mt-auto">
+            <div className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                initial={{ width: 0 }}
+                animate={unlocked ? { width: "100%" } : {}}
+                transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                style={{ background: `linear-gradient(90deg, ${cfg.color}60, ${cfg.color})` }}
+              />
+            </div>
+            <span className="text-xs font-mono flex-shrink-0" style={{ color: cfg.color }}>
+              {unlocked ? "✓ UNLOCKED" : "LOCKED"}
+            </span>
+          </div>
+        </motion.div>
+      </TiltCard>
+    </div>
+  );
+}
+
+// ── 3D flip cert card ─────────────────────────────────────────────────────────
+function CertCard() {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <div className="relative w-full h-52 cursor-pointer" style={{ perspective: 1000 }}
+      onClick={() => setFlipped(f => !f)}>
       <motion.div
         className="relative w-full h-full"
         animate={{ rotateY: flipped ? 180 : 0 }}
@@ -44,281 +133,131 @@ function CertCard() {
         style={{ transformStyle: "preserve-3d" }}
       >
         {/* Front */}
-        <div
-          className="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between border"
-          style={{
-            backfaceVisibility: "hidden",
-            background: "linear-gradient(135deg, #1a1000, #0a0a0f)",
-            borderColor: "#FF990030",
-          }}
-        >
-          <div className="flex items-start justify-between">
-            <div className="text-5xl">☁️</div>
-            <div
-              className="px-2 py-1 rounded-lg text-xs font-mono border"
-              style={{ color: "#FF9900", borderColor: "#FF990030", background: "#FF990010" }}
-            >
-              CERTIFIED
-            </div>
+        <div className="absolute inset-0 rounded-2xl p-5 flex flex-col justify-between border"
+          style={{ backfaceVisibility: "hidden", background: "linear-gradient(135deg,#1a1000,#0a0a0f)", borderColor: "#FF990030" }}>
+          <div className="flex justify-between items-start">
+            <span className="text-4xl">☁️</span>
+            <span className="text-xs font-mono px-2 py-1 rounded-lg border" style={{ color: "#FF9900", borderColor: "#FF990030", background: "#FF990010" }}>CERTIFIED</span>
           </div>
           <div>
-            <p className="text-2xl font-black text-white mb-1">SAA-C03</p>
+            <p className="text-2xl font-black text-white">SAA-C03</p>
             <p className="text-sm font-semibold" style={{ color: "#FF9900" }}>AWS Solutions Architect Associate</p>
-            <p className="text-slate-500 text-xs mt-1">Amazon Web Services</p>
+            <p className="text-slate-600 text-xs mt-0.5">Amazon Web Services</p>
           </div>
-          <p className="text-slate-600 text-xs font-mono">click to flip →</p>
+          <p className="text-slate-700 text-xs font-mono">click to flip →</p>
         </div>
-
         {/* Back */}
-        <div
-          className="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between border"
-          style={{
-            backfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-            background: "linear-gradient(135deg, #1a1000, #0a0a0f)",
-            borderColor: "#FF990030",
-          }}
-        >
-          <p className="text-xs text-slate-500 uppercase tracking-wider">What this means</p>
+        <div className="absolute inset-0 rounded-2xl p-5 flex flex-col justify-between border"
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(135deg,#1a1000,#0a0a0f)", borderColor: "#FF990030" }}>
+          <p className="text-xs text-slate-500 uppercase tracking-wider">What this certifies</p>
           <ul className="space-y-2">
-            {[
-              "Design resilient, high-availability AWS architectures",
-              "Choose the right service for cost & performance",
-              "Implement security best practices across AWS",
-              "Manage networking with VPC, Route53, CloudFront",
-            ].map((item) => (
+            {["Design resilient, HA AWS architectures", "Choose the right service for cost & perf", "Security best practices across AWS", "Networking — VPC, Route53, CloudFront"].map(item => (
               <li key={item} className="flex items-start gap-2 text-xs text-slate-300">
-                <span style={{ color: "#FF9900" }} className="mt-0.5 flex-shrink-0">▹</span>
-                {item}
+                <span style={{ color: "#FF9900" }} className="mt-0.5 flex-shrink-0">▹</span>{item}
               </li>
             ))}
           </ul>
-          <p className="text-slate-600 text-xs font-mono">← flip back</p>
+          <p className="text-slate-700 text-xs font-mono">← flip back</p>
         </div>
       </motion.div>
     </div>
   );
 }
 
-// ── Achievement unlock card ───────────────────────────────────────────────────
-const achConfig = [
-  {
-    icon: DollarSign,
-    color: "#10b981",
-    rarity: "EPIC",
-    rarityColor: "#10b981",
-    emoji: "💰",
-  },
-  {
-    icon: Users,
-    color: "#00d4ff",
-    rarity: "RARE",
-    rarityColor: "#00d4ff",
-    emoji: "🏆",
-  },
-];
-
-function AchievementCard({ ach, index, config }: {
-  ach: { title: string; description: string };
-  index: number;
-  config: typeof achConfig[0];
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const [unlocked, setUnlocked] = useState(false);
-  const [showFlash, setShowFlash] = useState(false);
-
-  useEffect(() => {
-    if (inView && !unlocked) {
-      const t = setTimeout(() => {
-        setUnlocked(true);
-        setShowFlash(true);
-        setTimeout(() => setShowFlash(false), 600);
-      }, index * 300 + 200);
-      return () => clearTimeout(t);
-    }
-  }, [inView, unlocked, index]);
-
-  return (
-    <div ref={ref} className="relative">
-      <AnimatePresence>
-        {showFlash && (
-          <motion.div
-            initial={{ opacity: 0.8 }}
-            animate={{ opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 rounded-2xl pointer-events-none z-10"
-            style={{ background: `radial-gradient(ellipse at center, ${config.color}60, transparent)` }}
-          />
-        )}
-      </AnimatePresence>
-
-      <motion.div
-        initial={{ opacity: 0, x: -30, filter: "blur(4px)" }}
-        animate={unlocked ? { opacity: 1, x: 0, filter: "blur(0px)" } : {}}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative rounded-2xl p-5 border overflow-hidden group transition-all duration-300"
-        style={{
-          background: unlocked ? `${config.color}06` : "rgba(15,15,25,0.8)",
-          borderColor: unlocked ? `${config.color}25` : "rgba(255,255,255,0.04)",
-        }}
-      >
-        {/* Rarity badge */}
-        <div className="absolute top-4 right-4 flex items-center gap-1">
-          <Star size={10} style={{ color: config.rarityColor }} fill={config.rarityColor} />
-          <span className="text-xs font-bold font-mono" style={{ color: config.rarityColor }}>
-            {config.rarity}
-          </span>
-        </div>
-
-        <div className="flex items-start gap-4">
-          <motion.div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 border"
-            style={{ background: `${config.color}12`, borderColor: `${config.color}25` }}
-            animate={unlocked ? { rotate: [0, -10, 10, -5, 0] } : {}}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            {config.emoji}
-          </motion.div>
-          <div className="flex-1 pr-16">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="text-white font-bold text-sm">{ach.title}</h4>
-            </div>
-            <p className="text-slate-400 text-xs leading-relaxed">{ach.description}</p>
-          </div>
-        </div>
-
-        {/* Unlock status bar */}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
-              initial={{ width: 0 }}
-              animate={unlocked ? { width: "100%" } : {}}
-              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              style={{ background: `linear-gradient(90deg, ${config.color}60, ${config.color})` }}
-            />
-          </div>
-          <span className="text-xs font-mono" style={{ color: config.color }}>
-            {unlocked ? "UNLOCKED ✓" : "LOCKED"}
-          </span>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-// ── Main section ──────────────────────────────────────────────────────────────
-const stats = [
-  { label: "Years Experience", target: 5, suffix: "+", icon: Zap, color: "#00d4ff" },
-  { label: "AWS Credits Secured", target: 5000, prefix: "$", icon: DollarSign, color: "#10b981" },
-  { label: "AWS Dispute Resolved", target: 1300, prefix: "$", icon: Trophy, color: "#FF9900" },
-  { label: "Pipelines Built", target: 50, suffix: "+", icon: Star, color: "#7c3aed" },
-];
-
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function Achievements() {
   return (
     <section id="achievements" className="py-24 px-6 bg-[#0a0a0f]">
-      <div className="max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-16 text-center"
-        >
+      <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="mb-16 text-center">
           <div className="inline-flex items-center gap-2 text-[#00d4ff] text-sm font-mono mb-3">
-            <Trophy size={14} />
-            <span>trophy_room.exe</span>
+            <Trophy size={14} /><span>trophy_room.exe</span>
           </div>
           <h2 className="text-4xl font-bold text-white">Trophy Room</h2>
-          <p className="text-slate-400 mt-2">Scroll to unlock achievements</p>
+          <p className="text-slate-400 mt-2">5 years of wins, numbers, and unlocks</p>
         </motion.div>
 
-        {/* Stat counters */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-          {stats.map((stat, i) => (
+        {/* Stat grid — 8 counters */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-16">
+          {careerStats.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="rounded-2xl p-5 text-center border"
-              style={{ background: `${stat.color}06`, borderColor: `${stat.color}15` }}
+              transition={{ delay: i * 0.07 }}
             >
-              <stat.icon size={18} className="mx-auto mb-2" style={{ color: stat.color }} />
-              <div className="text-2xl font-black text-white mb-1">
-                <Counter target={stat.target} prefix={stat.prefix} suffix={stat.suffix} />
-              </div>
-              <p className="text-slate-500 text-xs leading-tight">{stat.label}</p>
+              <TiltCard intensity={6}>
+                <div className="rounded-2xl p-4 text-center border h-full"
+                  style={{ background: `${stat.color}07`, borderColor: `${stat.color}18` }}>
+                  <div className="text-xl mb-1">{stat.icon}</div>
+                  <div className="text-xl font-black text-white mb-0.5">
+                    <Counter target={stat.value} prefix={stat.prefix} suffix={stat.suffix} />
+                  </div>
+                  <p className="text-slate-500 text-xs leading-tight">{stat.label}</p>
+                </div>
+              </TiltCard>
             </motion.div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left — cert + education */}
-          <div className="space-y-4">
-            <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-2">Certification</p>
-            <CertCard />
+        {/* Achievement cards grid */}
+        <div className="mb-12">
+          <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-6">Unlockable Achievements</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {achievements.map((ach, i) => (
+              <AchievementCard key={i} ach={ach} index={i} />
+            ))}
+          </div>
+        </div>
 
-            {/* Education */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="rounded-2xl p-5 border"
-              style={{ background: "#7c3aed08", borderColor: "#7c3aed20" }}
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#7c3aed]/10 border border-[#7c3aed]/20 flex items-center justify-center flex-shrink-0">
+        {/* Bottom row — cert + education + passive perks */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Cert */}
+          <div>
+            <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-4">Certification</p>
+            <CertCard />
+          </div>
+
+          {/* Education */}
+          <div>
+            <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-4">Education</p>
+            <TiltCard intensity={8}>
+              <div className="rounded-2xl p-5 border h-52 flex flex-col justify-between"
+                style={{ background: "#7c3aed08", borderColor: "#7c3aed20" }}>
+                <div className="w-10 h-10 rounded-xl bg-[#7c3aed]/10 border border-[#7c3aed]/20 flex items-center justify-center">
                   <GraduationCap size={18} className="text-[#7c3aed]" />
                 </div>
                 <div>
-                  <p className="text-slate-500 text-xs uppercase tracking-wider mb-0.5">Education</p>
-                  <h4 className="text-white font-bold text-sm">{education.degree}</h4>
-                  <p className="text-[#7c3aed] text-xs font-medium mt-0.5">{education.institution}</p>
+                  <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Degree</p>
+                  <h4 className="text-white font-bold text-sm leading-snug">{education.degree}</h4>
+                  <p className="text-[#7c3aed] text-xs font-medium mt-1">{education.institution}</p>
                   <p className="text-slate-600 text-xs mt-0.5">{education.year}</p>
                 </div>
               </div>
-            </motion.div>
+            </TiltCard>
           </div>
 
-          {/* Right — achievement unlock cards */}
-          <div className="lg:col-span-2 space-y-4">
-            <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-2">Unlockable Achievements</p>
-            {achievements.map((ach, i) => (
-              <AchievementCard
-                key={i}
-                ach={ach}
-                index={i}
-                config={achConfig[i % achConfig.length]}
-              />
-            ))}
-
-            {/* Soft skills as a "passive perks" panel */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="rounded-2xl p-5 border"
-              style={{ background: "#00d4ff05", borderColor: "#00d4ff12" }}
-            >
-              <p className="text-xs text-slate-500 uppercase tracking-widest font-mono mb-3">
-                Passive Perks
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {["Problem Solving", "Continuous Learning", "Collaboration", "Communication", "Curiosity", "Team Player"].map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-3 py-1 rounded-full text-xs border font-medium"
-                    style={{ color: "#00d4ff99", borderColor: "#00d4ff15", background: "#00d4ff08" }}
-                  >
-                    +{skill}
-                  </span>
-                ))}
+          {/* Passive perks */}
+          <div>
+            <p className="text-xs text-slate-600 uppercase tracking-widest font-mono mb-4">Passive Perks</p>
+            <TiltCard intensity={8}>
+              <div className="rounded-2xl p-5 border h-52 flex flex-col justify-between"
+                style={{ background: "#00d4ff05", borderColor: "#00d4ff12" }}>
+                <p className="text-xs text-slate-500">Soft skills that ship with the engineer</p>
+                <div className="flex flex-wrap gap-2">
+                  {["Problem Solving", "Continuous Learning", "Collaboration", "Communication", "Curiosity", "Team Player"].map(skill => (
+                    <span key={skill} className="px-2.5 py-1 rounded-full text-xs border font-medium"
+                      style={{ color: "#00d4ff90", borderColor: "#00d4ff18", background: "#00d4ff08" }}>
+                      +{skill}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </motion.div>
+            </TiltCard>
           </div>
         </div>
       </div>

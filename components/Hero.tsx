@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { GitBranch, ExternalLink, Mail, ChevronDown } from "lucide-react";
 import { personalInfo } from "@/lib/data";
 import MatrixRain from "./MatrixRain";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
+const HeroScene = lazy(() => import("./HeroScene"));
 
 const roles = [
   "Senior Cloud Engineer",
@@ -73,6 +74,9 @@ export default function Hero() {
   return (
     <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
       <MatrixRain />
+      <Suspense fallback={null}>
+        <HeroScene />
+      </Suspense>
 
       {/* Radial glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#00d4ff]/4 blur-3xl pointer-events-none" />

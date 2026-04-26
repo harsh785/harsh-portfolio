@@ -4,22 +4,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Code2, ArrowUpRight } from "lucide-react";
 import { skillWorlds, skillCategories, type SkillWorld } from "@/lib/skillWorlds";
 import SkillWorldModal from "./SkillWorld";
+import TiltCard from "./TiltCard";
 
 function SkillCard({ skill, onClick }: { skill: SkillWorld; onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
 
   return (
+    <TiltCard intensity={10}>
     <motion.button
       layout
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative text-left rounded-2xl p-5 border overflow-hidden group transition-all duration-300 cursor-pointer"
+      className="relative text-left rounded-2xl p-5 border overflow-hidden group transition-all duration-300 cursor-pointer w-full"
       style={{
         background: hovered ? `${skill.color}10` : "rgba(30,30,46,0.5)",
         borderColor: hovered ? `${skill.color}40` : "rgba(255,255,255,0.05)",
@@ -67,6 +68,7 @@ function SkillCard({ skill, onClick }: { skill: SkillWorld; onClick: () => void 
         </motion.span>
       </div>
     </motion.button>
+    </TiltCard>
   );
 }
 

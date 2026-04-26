@@ -10,6 +10,7 @@ import InteractiveTerminal from "@/components/InteractiveTerminal";
 import Contact from "@/components/Contact";
 import BootSequence from "@/components/BootSequence";
 import CursorGlow from "@/components/CursorGlow";
+import WindowRacer from "@/components/WindowRacer";
 
 export default function Home() {
   const [booted, setBooted] = useState(false);
@@ -19,7 +20,8 @@ export default function Home() {
       <CursorGlow />
       <BootSequence onDone={() => setBooted(true)} />
       {booted && (
-        <>
+        <div className="relative">
+          <WindowRacer />
           <Navbar />
           <main>
             <Hero />
@@ -30,7 +32,7 @@ export default function Home() {
             <Achievements />
             <Contact />
           </main>
-        </>
+        </div>
       )}
     </>
   );

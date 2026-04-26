@@ -165,7 +165,7 @@ export default function About() {
           </div>
 
           {/* ── Terminal card — spans 7 cols, row 2 ── */}
-          <div className="col-span-12 lg:col-span-7">
+          <div className="col-span-12 lg:col-span-7" data-track>
             <BentoCard delay={0.25} className="min-h-[220px]"
               style={{ background: "rgba(13,13,26,0.8)", borderColor: "rgba(0,212,255,0.08)" }}>
               <BentoTerminal />

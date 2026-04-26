@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Gamepad2 } from "lucide-react";
 import GameSection from "./GameSection";
-import HotWheelsGame from "./HotWheelsGame";
 import ThemeToggle from "./ThemeToggle";
 
 const links = ["About", "Experience", "Skills", "Achievements", "Contact"];
@@ -12,7 +11,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
-  const [activeGame, setActiveGame] = useState<"devops" | "hotwheels">("devops");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -120,40 +118,15 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-[#0d0d14] flex flex-col"
+            className="fixed inset-0 z-[60] bg-[#0d0d14]"
           >
-            {/* Game picker tab bar */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5 bg-[#0d0d14]/90 backdrop-blur-md shrink-0">
-              <div className="flex items-center gap-2 flex-1">
-                {([
-                  { id: "devops",    label: "🖥  Don't Let Prod Break", color: "#89dceb" },
-                  { id: "hotwheels", label: "🏎  Hot Wheels Circuit",   color: "#e63946" },
-                ] as const).map(g => (
-                  <button
-                    key={g.id}
-                    onClick={() => setActiveGame(g.id)}
-                    className="px-4 py-1.5 rounded-full text-xs font-mono border transition-all duration-200"
-                    style={activeGame === g.id
-                      ? { background: g.color, borderColor: g.color, color: "#000", fontWeight: 700 }
-                      : { background: "transparent", borderColor: "rgba(255,255,255,0.1)", color: "#64748b" }}
-                  >
-                    {g.label}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setGameOpen(false)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:border-white/20 transition-all text-xs font-mono"
-              >
-                <X size={12} /> close
-              </button>
-            </div>
-
-            {/* Game content */}
-            <div className="flex-1 overflow-hidden">
-              {activeGame === "devops"    && <GameSection />}
-              {activeGame === "hotwheels" && <HotWheelsGame />}
-            </div>
+            <button
+              onClick={() => setGameOpen(false)}
+              className="absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:border-white/20 transition-all text-sm font-mono"
+            >
+              <X size={14} /> close
+            </button>
+            <GameSection />
           </motion.div>
         )}
       </AnimatePresence>

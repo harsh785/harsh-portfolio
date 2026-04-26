@@ -55,7 +55,7 @@ export default function ThemeToggle() {
             transition={{ duration: 0.22 }}
             style={{ display: "flex" }}
           >
-            <Sun size={14} style={{ color: "#c2410c" }} />
+            <Sun size={14} style={{ color: "#7dd3fc" }} />
           </motion.span>
         )}
       </AnimatePresence>

@@ -22,25 +22,25 @@ html.dark {
   --shadow-card:   0 8px 32px rgba(0,0,0,0.4);
 }
 
-/* ── Light theme — Solarized "Vintage Paper" ────────────────────────────────── */
+/* ── Light theme — Blueprint ────────────────────────────────────────────────── */
 html.light {
-  --bg:            #fdf6e3;   /* warm cream — Solarized base3 */
-  --bg2:           #eee8d5;   /* slightly darker parchment — base2 */
-  --surface:       #e8e0ca;   /* card/panel surface */
-  --surface2:      #ddd5bc;   /* deeper panel */
-  --border:        rgba(101, 123, 131, 0.18);
-  --text:          #2d3748;   /* deep slate charcoal */
-  --text-sub:      #4a5568;
-  --text-muted:    #718096;
-  --accent:        #2563eb;   /* vivid blue — commands */
-  --accent2:       #7c3aed;   /* purple */
-  --green:         #166534;   /* forest green — success */
-  --yellow:        #92400e;   /* burnt amber — strings */
-  --red:           #991b1b;   /* deep red — errors */
-  --orange:        #c2410c;   /* burnt orange — numbers */
-  --blue:          #1d4ed8;   /* deep blue — paths */
-  --shadow-term:   0 4px 6px rgba(0,0,0,0.05), 0 20px 60px rgba(0,0,0,0.12);
-  --shadow-card:   0 4px 20px rgba(0,0,0,0.1);
+  --bg:            #0c2461;   /* deep blueprint navy */
+  --bg2:           #0f2d75;   /* slightly lighter navy for alternating sections */
+  --surface:       #163485;   /* card/panel surface */
+  --surface2:      #1a3d99;   /* elevated surface */
+  --border:        rgba(147, 210, 255, 0.2);
+  --text:          #e8f4fd;   /* almost-white blueprint text */
+  --text-sub:      #b8d9f5;   /* light blue sub-text */
+  --text-muted:    #7aafd4;   /* muted blue */
+  --accent:        #7dd3fc;   /* sky blue — commands/accent */
+  --accent2:       #c4b5fd;   /* lavender */
+  --green:         #6ee7b7;   /* mint — success */
+  --yellow:        #fde68a;   /* amber — strings */
+  --red:           #fca5a5;   /* rose — errors */
+  --orange:        #fdba74;   /* peach — numbers */
+  --blue:          #93c5fd;   /* blue — paths */
+  --shadow-term:   0 0 0 1px rgba(147,210,255,0.15), 0 20px 60px rgba(0,0,0,0.5);
+  --shadow-card:   0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(147,210,255,0.12);
 }
 
 * { box-sizing: border-box; }
@@ -54,11 +54,31 @@ body {
   transition: background 0.35s ease, color 0.35s ease;
 }
 
-/* ── Light mode warm paper texture ─────────────────────────────────────────── */
-html.light body {
+/* ── Blueprint grid overlay ─────────────────────────────────────────────────── */
+html.light body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   background-image:
-    radial-gradient(ellipse at 20% 10%, rgba(37,99,235,0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 90%, rgba(124,58,237,0.04) 0%, transparent 60%);
+    /* thick grid every 80px */
+    linear-gradient(rgba(147,210,255,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(147,210,255,0.12) 1px, transparent 1px),
+    /* fine grid every 20px */
+    linear-gradient(rgba(147,210,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(147,210,255,0.05) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+}
+
+/* ── Blueprint vignette — keep edges dark to focus center ───────────────────── */
+html.light body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(6,16,50,0.55) 100%);
 }
 
 /* ── CRT scanlines — dark only ──────────────────────────────────────────────── */
@@ -72,8 +92,8 @@ html.dark body::before {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.06) 2px,
-    rgba(0, 0, 0, 0.06) 4px
+    rgba(0,0,0,0.06) 2px,
+    rgba(0,0,0,0.06) 4px
   );
 }
 
@@ -103,7 +123,7 @@ html.dark body::after {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: rgba(137,220,235,0.25); border-radius: 2px; }
-html.light ::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.25); }
+html.light ::-webkit-scrollbar-thumb { background: rgba(125,211,252,0.35); }
 
 /* ── Neon green last name ───────────────────────────────────────────────────── */
 .neon-green-text {
@@ -113,8 +133,8 @@ html.light ::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.25); }
   animation: neon-flicker 5s linear infinite;
 }
 html.light .neon-green-text {
-  text-shadow: 0 2px 8px color-mix(in srgb, var(--green) 30%, transparent);
-  animation: none;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--green) 60%, transparent),
+               0 0 32px color-mix(in srgb, var(--green) 30%, transparent);
 }
 @keyframes neon-flicker {
   0%, 95%, 100% { opacity: 1; }
@@ -135,7 +155,7 @@ html.light .neon-green-text {
 }
 @keyframes shine { to { background-position: 200% center; } }
 
-/* ── Terminal syntax tokens — use CSS vars, auto-switch per theme ───────────── */
+/* ── Terminal syntax tokens ─────────────────────────────────────────────────── */
 .tok-prompt  { color: var(--green); }
 .tok-cmd     { color: var(--accent); }
 .tok-key     { color: var(--accent2); }
@@ -147,7 +167,7 @@ html.light .neon-green-text {
 .tok-number  { color: var(--orange); }
 .tok-path    { color: var(--blue); }
 
-/* ── Glassmorphism card ─────────────────────────────────────────────────────── */
+/* ── Glassmorphism ──────────────────────────────────────────────────────────── */
 .glass {
   background: rgba(30, 30, 46, 0.55);
   backdrop-filter: blur(16px);
@@ -155,35 +175,31 @@ html.light .neon-green-text {
   border: 1px solid var(--border);
 }
 html.light .glass {
-  background: rgba(253, 246, 227, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(101,123,131,0.2);
+  background: rgba(15, 45, 117, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(147,210,255,0.18);
   box-shadow: var(--shadow-term);
 }
 
-/* ── Terminal window chrome ─────────────────────────────────────────────────── */
+/* ── Terminal chrome ────────────────────────────────────────────────────────── */
 .term-chrome {
   background: rgba(24, 24, 37, 0.9);
   border-bottom: 1px solid rgba(137,220,235,0.08);
 }
 html.light .term-chrome {
-  background: var(--surface2);
-  border-bottom: 1px solid rgba(101,123,131,0.2);
+  background: rgba(10, 30, 80, 0.9);
+  border-bottom: 1px solid rgba(147,210,255,0.15);
 }
 
-/* ── Terminal selection hover ───────────────────────────────────────────────── */
+/* ── Terminal hover selection ───────────────────────────────────────────────── */
 .term-select:hover {
   background: rgba(137,220,235,0.07);
   color: var(--accent);
   box-shadow: inset 2px 0 0 var(--accent);
 }
-html.light .term-select:hover {
-  background: rgba(37,99,235,0.06);
-  box-shadow: inset 2px 0 0 var(--accent);
-}
 
-/* ── Section backgrounds (light) ────────────────────────────────────────────── */
+/* ── Section backgrounds ────────────────────────────────────────────────────── */
 html.light section {
   background-color: var(--bg) !important;
 }
@@ -191,31 +207,28 @@ html.light section:nth-child(even) {
   background-color: var(--bg2) !important;
 }
 
-/* ── Cards (light) ──────────────────────────────────────────────────────────── */
+/* ── Cards ──────────────────────────────────────────────────────────────────── */
 html.light .rounded-2xl.border {
-  background: rgba(232, 224, 202, 0.65) !important;
-  border-color: rgba(101,123,131,0.18) !important;
+  background: rgba(22, 52, 133, 0.6) !important;
+  border-color: rgba(147,210,255,0.18) !important;
   box-shadow: var(--shadow-card) !important;
   backdrop-filter: blur(8px);
 }
 
-/* ── Navbar (light) ─────────────────────────────────────────────────────────── */
+/* ── Navbar ─────────────────────────────────────────────────────────────────── */
 html.light nav {
-  background: rgba(238, 232, 213, 0.92) !important;
-  border-bottom-color: rgba(101,123,131,0.15) !important;
-  box-shadow: 0 1px 20px rgba(0,0,0,0.06) !important;
+  background: rgba(10, 30, 80, 0.92) !important;
+  border-bottom-color: rgba(147,210,255,0.12) !important;
+  box-shadow: 0 1px 24px rgba(0,0,0,0.3) !important;
 }
 
-/* ── Text overrides (light) ─────────────────────────────────────────────────── */
+/* ── Text overrides ─────────────────────────────────────────────────────────── */
 html.light .text-white    { color: var(--text) !important; }
-html.light .text-slate-200 { color: #374151 !important; }
-html.light .text-slate-300 { color: #4b5563 !important; }
-html.light .text-slate-400 { color: #6b7280 !important; }
-html.light .text-slate-500 { color: #9ca3af !important; }
-html.light .text-slate-600 { color: #b0b8c4 !important; }
-
-/* Fix: section eyebrows / labels */
-html.light .text-slate-600.font-mono { color: #6b7280 !important; }
+html.light .text-slate-200 { color: #c8e3f7 !important; }
+html.light .text-slate-300 { color: #b0cfe8 !important; }
+html.light .text-slate-400 { color: #7aafd4 !important; }
+html.light .text-slate-500 { color: #5a8fba !important; }
+html.light .text-slate-600 { color: #3d6f9a !important; }
 
 /* ── Grid background ────────────────────────────────────────────────────────── */
 .grid-bg {
@@ -225,16 +238,14 @@ html.light .text-slate-600.font-mono { color: #6b7280 !important; }
   background-size: 60px 60px;
 }
 html.light .grid-bg {
-  background-image:
-    linear-gradient(rgba(101,123,131,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(101,123,131,0.08) 1px, transparent 1px);
+  background-image: none; /* blueprint grid already on body */
 }
 
 /* ── Glow helpers ───────────────────────────────────────────────────────────── */
 .text-glow-cyan  { text-shadow: 0 0 12px rgba(137,220,235,0.6), 0 0 24px rgba(137,220,235,0.2); }
 .text-glow-green { text-shadow: 0 0 12px rgba(166,227,161,0.6), 0 0 24px rgba(166,227,161,0.2); }
-html.light .text-glow-cyan  { text-shadow: 0 1px 6px rgba(37,99,235,0.3); }
-html.light .text-glow-green { text-shadow: 0 1px 6px rgba(22,101,52,0.3); }
+html.light .text-glow-cyan  { text-shadow: 0 0 16px rgba(125,211,252,0.7), 0 0 32px rgba(125,211,252,0.3); }
+html.light .text-glow-green { text-shadow: 0 0 16px rgba(110,231,183,0.7), 0 0 32px rgba(110,231,183,0.3); }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }

@@ -1,42 +1,49 @@
 @import "tailwindcss";
 
-/* ── Dark theme (default) — Catppuccin Mocha ───────────────────────────────── */
+/* ── Dark theme — Catppuccin Mocha ──────────────────────────────────────────── */
 :root,
 html.dark {
-  --bg:         #0d0d14;
-  --bg2:        #181825;
-  --surface:    #1e1e2e;
-  --border:     rgba(137, 220, 235, 0.1);
-  --text:       #cdd6f4;
-  --text-muted: #6c7086;
-  --accent:     #89dceb;
-  --accent2:    #cba6f7;
-  --green:      #a6e3a1;
-  --yellow:     #f9e2af;
-  --red:        #f38ba8;
-  --orange:     #fab387;
-  --blue:       #89b4fa;
+  --bg:            #0d0d14;
+  --bg2:           #181825;
+  --surface:       #1e1e2e;
+  --surface2:      #252537;
+  --border:        rgba(137, 220, 235, 0.1);
+  --text:          #cdd6f4;
+  --text-sub:      #a6adc8;
+  --text-muted:    #6c7086;
+  --accent:        #89dceb;
+  --accent2:       #cba6f7;
+  --green:         #a6e3a1;
+  --yellow:        #f9e2af;
+  --red:           #f38ba8;
+  --orange:        #fab387;
+  --blue:          #89b4fa;
+  --shadow-term:   0 0 60px rgba(137,220,235,0.07), 0 25px 50px rgba(0,0,0,0.6);
+  --shadow-card:   0 8px 32px rgba(0,0,0,0.4);
 }
 
-/* ── Light theme — Catppuccin Latte ─────────────────────────────────────────── */
+/* ── Light theme — Solarized "Vintage Paper" ────────────────────────────────── */
 html.light {
-  --bg:         #eff1f5;
-  --bg2:        #e6e9ef;
-  --surface:    #dce0e8;
-  --border:     rgba(4, 165, 229, 0.18);
-  --text:       #4c4f69;
-  --text-muted: #9ca0b0;
-  --accent:     #04a5e5;
-  --accent2:    #8839ef;
-  --green:      #40a02b;
-  --yellow:     #df8e1d;
-  --red:        #d20f39;
-  --orange:     #fe640b;
-  --blue:       #1e66f5;
+  --bg:            #fdf6e3;   /* warm cream — Solarized base3 */
+  --bg2:           #eee8d5;   /* slightly darker parchment — base2 */
+  --surface:       #e8e0ca;   /* card/panel surface */
+  --surface2:      #ddd5bc;   /* deeper panel */
+  --border:        rgba(101, 123, 131, 0.18);
+  --text:          #2d3748;   /* deep slate charcoal */
+  --text-sub:      #4a5568;
+  --text-muted:    #718096;
+  --accent:        #2563eb;   /* vivid blue — commands */
+  --accent2:       #7c3aed;   /* purple */
+  --green:         #166534;   /* forest green — success */
+  --yellow:        #92400e;   /* burnt amber — strings */
+  --red:           #991b1b;   /* deep red — errors */
+  --orange:        #c2410c;   /* burnt orange — numbers */
+  --blue:          #1d4ed8;   /* deep blue — paths */
+  --shadow-term:   0 4px 6px rgba(0,0,0,0.05), 0 20px 60px rgba(0,0,0,0.12);
+  --shadow-card:   0 4px 20px rgba(0,0,0,0.1);
 }
 
 * { box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -44,7 +51,14 @@ body {
   color: var(--text);
   font-family: "JetBrains Mono", "Fira Code", "Roboto Mono", monospace;
   overflow-x: hidden;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+/* ── Light mode warm paper texture ─────────────────────────────────────────── */
+html.light body {
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(37,99,235,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(124,58,237,0.04) 0%, transparent 60%);
 }
 
 /* ── CRT scanlines — dark only ──────────────────────────────────────────────── */
@@ -73,14 +87,13 @@ html.dark body::after {
   background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.45) 100%);
 }
 
-/* ── Blinking cursor on headers ─────────────────────────────────────────────── */
+/* ── Blinking cursor ────────────────────────────────────────────────────────── */
 .cursor-blink::after {
   content: "_";
   animation: blink 1.1s step-start infinite;
   color: var(--accent);
   margin-left: 2px;
 }
-
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
@@ -89,28 +102,26 @@ html.dark body::after {
 /* ── Scrollbar ──────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: rgba(137, 220, 235, 0.25); border-radius: 2px; }
-html.light ::-webkit-scrollbar-thumb { background: rgba(4, 165, 229, 0.3); }
+::-webkit-scrollbar-thumb { background: rgba(137,220,235,0.25); border-radius: 2px; }
+html.light ::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.25); }
 
-/* ── Neon green (last name) ─────────────────────────────────────────────────── */
+/* ── Neon green last name ───────────────────────────────────────────────────── */
 .neon-green-text {
   color: var(--green);
   text-shadow: 0 0 20px color-mix(in srgb, var(--green) 50%, transparent),
                0 0 40px color-mix(in srgb, var(--green) 20%, transparent);
   animation: neon-flicker 5s linear infinite;
 }
-
 html.light .neon-green-text {
-  text-shadow: 0 0 10px color-mix(in srgb, var(--green) 40%, transparent);
+  text-shadow: 0 2px 8px color-mix(in srgb, var(--green) 30%, transparent);
   animation: none;
 }
-
 @keyframes neon-flicker {
   0%, 95%, 100% { opacity: 1; }
-  96%           { opacity: 0.8; }
-  97%           { opacity: 1; }
-  98%           { opacity: 0.9; }
-  99%           { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
+  98% { opacity: 0.9; }
+  99% { opacity: 1; }
 }
 
 /* ── Gradient text ──────────────────────────────────────────────────────────── */
@@ -122,10 +133,9 @@ html.light .neon-green-text {
   background-clip: text;
   animation: shine 4s linear infinite;
 }
-
 @keyframes shine { to { background-position: 200% center; } }
 
-/* ── Terminal syntax tokens ─────────────────────────────────────────────────── */
+/* ── Terminal syntax tokens — use CSS vars, auto-switch per theme ───────────── */
 .tok-prompt  { color: var(--green); }
 .tok-cmd     { color: var(--accent); }
 .tok-key     { color: var(--accent2); }
@@ -144,94 +154,92 @@ html.light .neon-green-text {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
 }
-
 html.light .glass {
-  background: rgba(220, 224, 232, 0.7);
+  background: rgba(253, 246, 227, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(101,123,131,0.2);
+  box-shadow: var(--shadow-term);
 }
 
 /* ── Terminal window chrome ─────────────────────────────────────────────────── */
 .term-chrome {
   background: rgba(24, 24, 37, 0.9);
-  border-bottom: 1px solid rgba(137, 220, 235, 0.08);
+  border-bottom: 1px solid rgba(137,220,235,0.08);
 }
-
 html.light .term-chrome {
-  background: rgba(210, 215, 223, 0.95);
-  border-bottom: 1px solid rgba(4, 165, 229, 0.12);
+  background: var(--surface2);
+  border-bottom: 1px solid rgba(101,123,131,0.2);
 }
 
-/* ── Terminal hover selection ───────────────────────────────────────────────── */
+/* ── Terminal selection hover ───────────────────────────────────────────────── */
 .term-select:hover {
-  background: rgba(137, 220, 235, 0.07);
+  background: rgba(137,220,235,0.07);
   color: var(--accent);
   box-shadow: inset 2px 0 0 var(--accent);
 }
-
 html.light .term-select:hover {
-  background: rgba(4, 165, 229, 0.08);
+  background: rgba(37,99,235,0.06);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
-/* ── Section background overrides (light mode) ──────────────────────────────── */
+/* ── Section backgrounds (light) ────────────────────────────────────────────── */
 html.light section {
   background-color: var(--bg) !important;
 }
-
-/* Alternating sections slightly lighter */
 html.light section:nth-child(even) {
   background-color: var(--bg2) !important;
 }
 
-/* ── Card overrides (light mode) ────────────────────────────────────────────── */
-html.light [class*="bg-[#"] {
-  /* can't target all, handled per-component via CSS vars below */
-}
-
-/* rounded-2xl border cards in bento / achievements / skills */
+/* ── Cards (light) ──────────────────────────────────────────────────────────── */
 html.light .rounded-2xl.border {
-  background: rgba(220, 224, 232, 0.7) !important;
-  border-color: rgba(4, 165, 229, 0.15) !important;
+  background: rgba(232, 224, 202, 0.65) !important;
+  border-color: rgba(101,123,131,0.18) !important;
+  box-shadow: var(--shadow-card) !important;
+  backdrop-filter: blur(8px);
 }
 
-/* Navbar */
+/* ── Navbar (light) ─────────────────────────────────────────────────────────── */
 html.light nav {
-  background: rgba(239, 241, 245, 0.9) !important;
-  border-bottom-color: rgba(4, 165, 229, 0.15) !important;
+  background: rgba(238, 232, 213, 0.92) !important;
+  border-bottom-color: rgba(101,123,131,0.15) !important;
+  box-shadow: 0 1px 20px rgba(0,0,0,0.06) !important;
 }
 
-/* Text overrides */
-html.light .text-white         { color: #4c4f69 !important; }
-html.light .text-slate-200     { color: #5c5f77 !important; }
-html.light .text-slate-300     { color: #6c6f85 !important; }
-html.light .text-slate-400     { color: #7c7f93 !important; }
-html.light .text-slate-500     { color: #9ca0b0 !important; }
-html.light .text-slate-600     { color: #acafc0 !important; }
+/* ── Text overrides (light) ─────────────────────────────────────────────────── */
+html.light .text-white    { color: var(--text) !important; }
+html.light .text-slate-200 { color: #374151 !important; }
+html.light .text-slate-300 { color: #4b5563 !important; }
+html.light .text-slate-400 { color: #6b7280 !important; }
+html.light .text-slate-500 { color: #9ca3af !important; }
+html.light .text-slate-600 { color: #b0b8c4 !important; }
+
+/* Fix: section eyebrows / labels */
+html.light .text-slate-600.font-mono { color: #6b7280 !important; }
 
 /* ── Grid background ────────────────────────────────────────────────────────── */
 .grid-bg {
   background-image:
-    linear-gradient(rgba(137, 220, 235, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(137, 220, 235, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(137,220,235,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(137,220,235,0.03) 1px, transparent 1px);
   background-size: 60px 60px;
 }
-
 html.light .grid-bg {
   background-image:
-    linear-gradient(rgba(4, 165, 229, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(4, 165, 229, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(101,123,131,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,123,131,0.08) 1px, transparent 1px);
 }
 
-/* ── Glow text helpers ──────────────────────────────────────────────────────── */
+/* ── Glow helpers ───────────────────────────────────────────────────────────── */
 .text-glow-cyan  { text-shadow: 0 0 12px rgba(137,220,235,0.6), 0 0 24px rgba(137,220,235,0.2); }
 .text-glow-green { text-shadow: 0 0 12px rgba(166,227,161,0.6), 0 0 24px rgba(166,227,161,0.2); }
-
-html.light .text-glow-cyan  { text-shadow: 0 0 8px rgba(4,165,229,0.4); }
-html.light .text-glow-green { text-shadow: 0 0 8px rgba(64,160,43,0.4); }
+html.light .text-glow-cyan  { text-shadow: 0 1px 6px rgba(37,99,235,0.3); }
+html.light .text-glow-green { text-shadow: 0 1px 6px rgba(22,101,52,0.3); }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-10px); }
 }
-
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px rgba(137,220,235,0.2); }
   50%       { box-shadow: 0 0 40px rgba(137,220,235,0.4); }

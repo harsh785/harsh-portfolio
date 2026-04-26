@@ -179,7 +179,7 @@ export default function InteractiveTerminal() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
           onClick={() => inputRef.current?.focus()}
-          data-track
+          data-physics
           className="cursor-text rounded-xl overflow-hidden shadow-2xl"
           style={{ boxShadow: "0 0 60px rgba(137,220,235,0.07), 0 25px 50px rgba(0,0,0,0.6)" }}
         >

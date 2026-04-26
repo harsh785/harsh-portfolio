@@ -14,8 +14,8 @@ const C = {
   rock: 0x888888, rockDark: 0x606060,
   water: 0x3ab4e8, waterEdge: 0x2a8abf, sand: 0xd4c080,
   fence: 0xb89060, post: 0x9a6830, sign: 0xfef9ef,
-  // Car
-  carPrimary: 0xff2d2d, carDark: 0xb81818, carBlack: 0x111111,
+  // Car (Thar burnt orange)
+  carPrimary: 0xcc4a12, carDark: 0x8c2a08, carBlack: 0x111111,
   carChrome: 0xdddddd, carGlass: 0x88ccee, carRim: 0xe8e8e8,
   carLight: 0xfffacc, carTail: 0xff1133,
   // DevOps
@@ -27,85 +27,281 @@ const flat  = (c:number, o:Partial<THREE.MeshLambertMaterialParameters>={}) =>
 const phong = (c:number, o:Partial<THREE.MeshPhongMaterialParameters>={}) =>
   new THREE.MeshPhongMaterial({color:c,flatShading:true,shininess:80,...o});
 
-// ─── Car ──────────────────────────────────────────────────────────────────────
+// ─── Mahindra Thar-style SUV ──────────────────────────────────────────────────
+// Car faces +Z. All y positions are relative to chassis center (y=0 in local space).
 function makeCarMesh() {
   const root = new THREE.Group();
   const add = (geo:THREE.BufferGeometry, mat:THREE.Material, x=0,y=0,z=0,rx=0,ry=0,rz=0) => {
     const m = new THREE.Mesh(geo,mat);
     m.position.set(x,y,z); m.rotation.set(rx,ry,rz); m.castShadow=true; root.add(m); return m;
   };
-  const body = phong(C.carPrimary,{shininess:140});
-  const dark = flat(C.carDark);
-  const blk  = flat(C.carBlack);
-  const chr  = phong(C.carChrome,{shininess:220});
-  const emitW= phong(C.carLight, {emissive:0xffffaa,emissiveIntensity:0.7,shininess:200});
-  const emitR= phong(C.carTail,  {emissive:0xaa0020,emissiveIntensity:0.8});
-  const gl   = new THREE.MeshPhongMaterial({color:C.carGlass,transparent:true,opacity:0.52,shininess:200,side:THREE.DoubleSide});
 
-  add(new THREE.BoxGeometry(1.60,0.12,3.90), flat(0x0a0a0a), 0,-0.06,0);
-  add(new THREE.BoxGeometry(1.72,0.42,3.90), body);
-  add(new THREE.BoxGeometry(1.68,0.30,1.40), body,  0, 0.50, 1.12,-0.14);
-  add(new THREE.BoxGeometry(1.50,0.50,1.82), body,  0, 0.67,-0.28);
-  add(new THREE.BoxGeometry(1.44,0.09,1.60), phong(C.carDark,{shininess:60}), 0,0.96,-0.28);
-  add(new THREE.BoxGeometry(1.50,0.40,0.09), dark,  0, 0.64, 0.61,-0.44);
-  add(new THREE.BoxGeometry(1.44,0.36,0.09), dark,  0, 0.64,-1.18, 0.38);
-  add(new THREE.BoxGeometry(1.30,0.37,0.06), gl,    0, 0.65, 0.61,-0.44);
-  add(new THREE.BoxGeometry(1.26,0.32,0.06), gl,    0, 0.64,-1.18, 0.38);
-  add(new THREE.BoxGeometry(0.05,0.38,0.88), new THREE.MeshPhongMaterial({color:C.carGlass,transparent:true,opacity:0.45,side:THREE.DoubleSide}),-0.77,0.65,-0.28);
-  add(new THREE.BoxGeometry(0.05,0.38,0.88), new THREE.MeshPhongMaterial({color:C.carGlass,transparent:true,opacity:0.45,side:THREE.DoubleSide}), 0.77,0.65,-0.28);
-  add(new THREE.BoxGeometry(0.09,0.18,3.60), dark, -0.88,0.09,0);
-  add(new THREE.BoxGeometry(0.09,0.18,3.60), dark,  0.88,0.09,0);
-  add(new THREE.BoxGeometry(1.72,0.26,0.14), dark,  0, 0.04, 1.97);
-  add(new THREE.BoxGeometry(1.62,0.06,0.30), blk,   0,-0.09, 2.0);
-  add(new THREE.BoxGeometry(0.82,0.14,0.12), blk,   0, 0.14, 1.99);
-  for(let i=-2;i<=2;i++) add(new THREE.BoxGeometry(0.03,0.14,0.06),flat(0x333333),i*0.18,0.14,2.02);
-  add(new THREE.BoxGeometry(0.22,0.10,0.08), emitW,-0.62,0.04,1.97);
-  add(new THREE.BoxGeometry(0.22,0.10,0.08), emitW, 0.62,0.04,1.97);
-  add(new THREE.BoxGeometry(0.36,0.12,0.08), emitW,-0.58,0.20,1.97);
-  add(new THREE.BoxGeometry(0.36,0.12,0.08), emitW, 0.58,0.20,1.97);
-  add(new THREE.BoxGeometry(1.36,0.04,0.06), emitW, 0,   0.30,1.97);
-  add(new THREE.BoxGeometry(1.72,0.26,0.14), dark,  0, 0.04,-1.97);
-  add(new THREE.BoxGeometry(0.90,0.06,0.26), blk,   0,-0.09,-2.0);
-  add(new THREE.BoxGeometry(0.46,0.12,0.08), emitR,-0.58,0.20,-1.97);
-  add(new THREE.BoxGeometry(0.46,0.12,0.08), emitR, 0.58,0.20,-1.97);
-  add(new THREE.BoxGeometry(1.36,0.04,0.06), emitR, 0,   0.30,-1.97);
-  add(new THREE.CylinderGeometry(0.065,0.065,0.18,8), chr,-0.34,-0.09,-1.97, Math.PI/2);
-  add(new THREE.CylinderGeometry(0.065,0.065,0.18,8), chr, 0.34,-0.09,-1.97, Math.PI/2);
-  add(new THREE.BoxGeometry(1.62,0.09,0.36), dark, 0,1.04,-1.80);
-  add(new THREE.BoxGeometry(0.08,0.26,0.30), dark,-0.80,0.88,-1.80);
-  add(new THREE.BoxGeometry(0.08,0.26,0.30), dark, 0.80,0.88,-1.80);
-  add(new THREE.BoxGeometry(0.24,0.10,0.16), dark,-0.96,0.44, 0.92);
-  add(new THREE.BoxGeometry(0.24,0.10,0.16), dark, 0.96,0.44, 0.92);
-  add(new THREE.BoxGeometry(0.06,0.09,0.06), blk, -0.90,0.39,0.90);
-  add(new THREE.BoxGeometry(0.06,0.09,0.06), blk,  0.90,0.39,0.90);
-  add(new THREE.CylinderGeometry(0.015,0.015,0.45,4),flat(0x555555),0.50,1.02,-0.60);
-  add(new THREE.BoxGeometry(0.20,0.025,3.70),phong(0xffffff,{shininess:40}),0,0.425,0);
-  add(new THREE.BoxGeometry(0.18,0.05,0.04),chr,-0.89,0.40,-0.10);
-  add(new THREE.BoxGeometry(0.18,0.05,0.04),chr, 0.89,0.40,-0.10);
+  const ORANGE  = phong(0xcc4a12, { shininess: 110 });
+  const SILVER  = phong(0xb0b0b0, { shininess: 140 });
+  const DGRAY   = flat(0x2a2a2a);
+  const MGRAY   = flat(0x555555);
+  const LGRAY   = flat(0x888888);
+  const BLACK   = flat(0x0a0a0a);
+  const EMITW   = phong(0xfffacc, { emissive:0xffffaa, emissiveIntensity:0.7, shininess:200 });
+  const EMITR   = phong(0xff1133, { emissive:0xaa0020, emissiveIntensity:0.8 });
+  const GLASS   = new THREE.MeshPhongMaterial({ color:0x88ccee, transparent:true, opacity:0.48, shininess:180, side:THREE.DoubleSide });
 
-  root.traverse(m=>{const mm=m as THREE.Mesh; if(mm.isMesh){mm.castShadow=true;mm.receiveShadow=true;}});
+  // ── Undercarriage / frame ──
+  add(new THREE.BoxGeometry(1.80, 0.12, 3.60), BLACK,       0, -0.26, 0);
+  // Frame rails
+  add(new THREE.BoxGeometry(0.12, 0.10, 3.50), flat(0x333333), -0.75, -0.22, 0);
+  add(new THREE.BoxGeometry(0.12, 0.10, 3.50), flat(0x333333),  0.75, -0.22, 0);
+
+  // ── Lower body (boxy, wide) ──
+  add(new THREE.BoxGeometry(1.90, 0.68, 3.60), ORANGE,      0, 0.10, 0);
+
+  // ── Fender wells (slight arch above wheels) ──
+  for (const sx of [-1, 1]) {
+    // Front fender arch
+    add(new THREE.CylinderGeometry(0.52, 0.52, 0.26, 10), ORANGE, sx*0.94, 0.18, 1.30, 0, 0, Math.PI/2);
+    // Rear fender arch
+    add(new THREE.CylinderGeometry(0.52, 0.52, 0.26, 10), ORANGE, sx*0.94, 0.18,-1.25, 0, 0, Math.PI/2);
+    // Fender flare trim (dark plastic)
+    add(new THREE.CylinderGeometry(0.54, 0.54, 0.08, 10), DGRAY, sx*0.97, 0.18, 1.30, 0, 0, Math.PI/2);
+    add(new THREE.CylinderGeometry(0.54, 0.54, 0.08, 10), DGRAY, sx*0.97, 0.18,-1.25, 0, 0, Math.PI/2);
+  }
+
+  // ── Cabin (upright, boxy — Thar has tall vertical sides) ──
+  add(new THREE.BoxGeometry(1.88, 0.90, 2.20), ORANGE,      0, 0.79, -0.22);
+
+  // ── Flat roof ──
+  add(new THREE.BoxGeometry(1.86, 0.09, 2.14), flat(0x333333), 0, 1.25, -0.22);
+  // Roof rack rails
+  add(new THREE.BoxGeometry(0.06, 0.06, 1.90), LGRAY,      -0.82, 1.31, -0.22);
+  add(new THREE.BoxGeometry(0.06, 0.06, 1.90), LGRAY,       0.82, 1.31, -0.22);
+  add(new THREE.BoxGeometry(1.70, 0.06, 0.06), LGRAY,       0, 1.31, 0.72);
+  add(new THREE.BoxGeometry(1.70, 0.06, 0.06), LGRAY,       0, 1.31,-1.12);
+
+  // ── Hood (flat with slight rise in center) ──
+  add(new THREE.BoxGeometry(1.90, 0.08, 1.28), ORANGE,      0, 0.48, 1.08);
+  // Hood power bulge
+  add(new THREE.BoxGeometry(0.42, 0.06, 1.10), ORANGE,      0, 0.52, 1.10);
+  // Hood hinge line
+  add(new THREE.BoxGeometry(1.90, 0.04, 0.06), DGRAY,       0, 0.46, 0.47);
+
+  // ── Windshield (tall, nearly vertical — Thar characteristic) ──
+  add(new THREE.BoxGeometry(1.76, 0.78, 0.08), GLASS,       0, 0.80, 0.48, -0.08, 0, 0);
+  // Windshield frame
+  add(new THREE.BoxGeometry(1.88, 0.84, 0.06), DGRAY,       0, 0.80, 0.48, -0.08, 0, 0);
+  // Wiper (horizontal bar)
+  add(new THREE.BoxGeometry(1.40, 0.04, 0.04), MGRAY,       0, 0.47, 0.52);
+
+  // ── Rear window ──
+  add(new THREE.BoxGeometry(1.72, 0.60, 0.08), GLASS,       0, 0.80,-1.34, 0.06, 0, 0);
+  add(new THREE.BoxGeometry(1.84, 0.66, 0.06), DGRAY,       0, 0.80,-1.34, 0.06, 0, 0);
+
+  // ── Side windows ──
+  for (const sx of [-1, 1]) {
+    add(new THREE.BoxGeometry(0.07, 0.64, 1.44), GLASS,  sx*0.95, 0.82, -0.22);
+    add(new THREE.BoxGeometry(0.04, 0.70, 1.50), DGRAY,  sx*0.96, 0.82, -0.22);
+  }
+
+  // ── A-pillar ──
+  add(new THREE.BoxGeometry(0.10, 0.84, 0.10), DGRAY,  -0.92, 0.80, 0.48);
+  add(new THREE.BoxGeometry(0.10, 0.84, 0.10), DGRAY,   0.92, 0.80, 0.48);
+
+  // ── Front face — Thar's signature grille area ──
+  // Outer grille frame (body color band)
+  add(new THREE.BoxGeometry(1.90, 0.56, 0.10), ORANGE,    0, 0.20, 1.82);
+  // Inner grille opening (dark recess)
+  add(new THREE.BoxGeometry(1.10, 0.44, 0.08), DGRAY,     0, 0.22, 1.85);
+  // 7 vertical grille bars (Thar signature)
+  for (let i = -3; i <= 3; i++) {
+    add(new THREE.BoxGeometry(0.09, 0.42, 0.10), BLACK,   i * 0.168, 0.22, 1.87);
+  }
+  // Grille surround trim (chrome)
+  add(new THREE.BoxGeometry(1.14, 0.48, 0.06), SILVER,    0, 0.22, 1.83);
+
+  // ── "MAHINDRA" hood text bar ──
+  add(new THREE.BoxGeometry(0.85, 0.07, 0.06), DGRAY,     0, 0.50, 1.80);
+
+  // ── Round headlights (Thar's circular headlamps) ──
+  for (const sx of [-0.68, 0.68]) {
+    // Outer bezel ring (orange fender, already covered)
+    // Dark surround
+    add(new THREE.CylinderGeometry(0.195, 0.195, 0.14, 16), DGRAY, sx, 0.28, 1.82, Math.PI/2, 0, 0);
+    // Chrome ring
+    add(new THREE.CylinderGeometry(0.210, 0.210, 0.06, 16), SILVER, sx, 0.28, 1.80, Math.PI/2, 0, 0);
+    // Light lens
+    add(new THREE.CylinderGeometry(0.168, 0.168, 0.10, 16), EMITW,  sx, 0.28, 1.87, Math.PI/2, 0, 0);
+    // DRL ring
+    add(new THREE.TorusGeometry(0.19, 0.025, 6, 16), EMITW, sx, 0.28, 1.84);
+  }
+
+  // ── Turn signal (small orange rectangle beside headlights) ──
+  add(new THREE.BoxGeometry(0.12, 0.08, 0.06), phong(0xffaa00, { emissive:0xff8800, emissiveIntensity:0.5 }), -0.85, 0.28, 1.82);
+  add(new THREE.BoxGeometry(0.12, 0.08, 0.06), phong(0xffaa00, { emissive:0xff8800, emissiveIntensity:0.5 }),  0.85, 0.28, 1.82);
+
+  // ── Front bumper (silver, chunky) ──
+  add(new THREE.BoxGeometry(1.92, 0.26, 0.22), SILVER,    0, -0.10, 1.84);
+  // Bumper bash plate
+  add(new THREE.BoxGeometry(1.92, 0.12, 0.28), DGRAY,     0, -0.22, 1.82);
+  // Skid plate
+  add(new THREE.BoxGeometry(1.60, 0.08, 0.24), flat(0x444444), 0, -0.30, 1.80);
+  // Tow hook
+  add(new THREE.CylinderGeometry(0.04, 0.04, 0.22, 8), SILVER, -0.60, -0.26, 1.90, 0, 0, Math.PI/2);
+  add(new THREE.CylinderGeometry(0.04, 0.04, 0.22, 8), SILVER,  0.60, -0.26, 1.90, 0, 0, Math.PI/2);
+
+  // ── "THAR" license plate ──
+  add(new THREE.BoxGeometry(0.54, 0.16, 0.06), flat(0xeeeeee), 0, -0.06, 1.91);
+  add(new THREE.BoxGeometry(0.50, 0.12, 0.08), BLACK,          0, -0.06, 1.93); // text area
+
+  // ── Running boards / side steps ──
+  add(new THREE.BoxGeometry(0.18, 0.08, 2.80), DGRAY,  -0.98, -0.24, 0.02);
+  add(new THREE.BoxGeometry(0.18, 0.08, 2.80), DGRAY,   0.98, -0.24, 0.02);
+  // Step grip lines
+  for (const sz of [-0.8, -0.2, 0.4]) {
+    add(new THREE.BoxGeometry(0.16, 0.04, 0.06), flat(0x333333), -0.98, -0.20, sz);
+    add(new THREE.BoxGeometry(0.16, 0.04, 0.06), flat(0x333333),  0.98, -0.20, sz);
+  }
+
+  // ── Door hinges (A-pillar side) ──
+  for (const sx of [-0.96, 0.96]) {
+    for (const hz of [0.36, 0.58]) {
+      add(new THREE.BoxGeometry(0.10, 0.09, 0.08), SILVER, sx, hz, 0.47);
+    }
+    // Rear door hinges (Thar 4-door hint, decorative)
+    for (const hz of [0.36, 0.58]) {
+      add(new THREE.BoxGeometry(0.10, 0.09, 0.08), SILVER, sx, hz, -0.35);
+    }
+  }
+
+  // ── Door handles ──
+  add(new THREE.BoxGeometry(0.22, 0.06, 0.08), SILVER, -0.97, 0.36, 0.05);
+  add(new THREE.BoxGeometry(0.22, 0.06, 0.08), SILVER,  0.97, 0.36, 0.05);
+
+  // ── Side mirrors (A-pillar mounted, large) ──
+  add(new THREE.BoxGeometry(0.06, 0.10, 0.08), DGRAY, -0.96, 0.76, 0.50); // stalk
+  add(new THREE.BoxGeometry(0.06, 0.10, 0.08), DGRAY,  0.96, 0.76, 0.50);
+  add(new THREE.BoxGeometry(0.30, 0.16, 0.18), DGRAY, -1.06, 0.76, 0.44); // mirror
+  add(new THREE.BoxGeometry(0.30, 0.16, 0.18), DGRAY,  1.06, 0.76, 0.44);
+  // Mirror glass
+  add(new THREE.BoxGeometry(0.26, 0.13, 0.05), phong(0x6688aa,{shininess:200}), -1.06, 0.76, 0.38);
+  add(new THREE.BoxGeometry(0.26, 0.13, 0.05), phong(0x6688aa,{shininess:200}),  1.06, 0.76, 0.38);
+
+  // ── Tail lights (rectangular, Thar-style) ──
+  for (const sx of [-0.78, 0.78]) {
+    add(new THREE.BoxGeometry(0.32, 0.22, 0.08), EMITR,  sx, 0.26,-1.82);
+    // White reverse light
+    add(new THREE.BoxGeometry(0.14, 0.10, 0.06), EMITW,  sx, 0.10,-1.82);
+  }
+  // Rear reflector strip
+  add(new THREE.BoxGeometry(1.70, 0.05, 0.06), phong(0xff4444,{emissive:0xaa0000,emissiveIntensity:0.4}), 0, 0.40,-1.82);
+
+  // ── Rear bumper ──
+  add(new THREE.BoxGeometry(1.90, 0.26, 0.22), SILVER,  0,-0.10,-1.84);
+  add(new THREE.BoxGeometry(1.90, 0.12, 0.28), DGRAY,   0,-0.22,-1.82);
+  // Dual exhausts
+  add(new THREE.CylinderGeometry(0.055, 0.055, 0.20, 8), SILVER, -0.44,-0.24,-1.92, Math.PI/2, 0, 0);
+  add(new THREE.CylinderGeometry(0.055, 0.055, 0.20, 8), SILVER,  0.44,-0.24,-1.92, Math.PI/2, 0, 0);
+
+  // ── Spare tire on rear door (Thar's signature) ──
+  // Tire
+  add(new THREE.CylinderGeometry(0.43, 0.43, 0.26, 14), flat(0x111111), 0, 0.55,-1.95, 0, 0, Math.PI/2);
+  // Rim
+  add(new THREE.CylinderGeometry(0.24, 0.24, 0.28, 8),  LGRAY,          0, 0.55,-1.95, 0, 0, Math.PI/2);
+  // Spare tire carrier frame
+  add(new THREE.BoxGeometry(0.08, 1.10, 0.08), DGRAY,    0, 0.55,-1.88);
+  add(new THREE.BoxGeometry(1.0,  0.08, 0.08), DGRAY,    0, 0.12,-1.88);
+  add(new THREE.BoxGeometry(1.0,  0.08, 0.08), DGRAY,    0, 0.98,-1.88);
+
+  // ── Antenna ──
+  add(new THREE.CylinderGeometry(0.016, 0.016, 0.55, 4), flat(0x555555), -0.88, 1.33, -0.80);
+
+  root.traverse(m => {
+    const mm = m as THREE.Mesh;
+    if (mm.isMesh) { mm.castShadow = true; mm.receiveShadow = true; }
+  });
   return root;
 }
 
-function makeWheel(mirrorX=false) {
+// ─── Off-road Wheel (chunky, knobby) ─────────────────────────────────────────
+function makeWheel(mirrorX = false) {
   const root = new THREE.Group();
-  if(mirrorX) root.scale.x = -1;
+  if (mirrorX) root.scale.x = -1;
   const add = (geo:THREE.BufferGeometry, mat:THREE.Material, x=0,y=0,z=0,rx=0,ry=0,rz=0) => {
-    const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.rotation.set(rx,ry,rz); m.castShadow=true; root.add(m);
+    const m = new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.rotation.set(rx,ry,rz); m.castShadow=true; root.add(m);
   };
-  add(new THREE.CylinderGeometry(0.36,0.36,0.30,16), flat(0x111111), 0,0,0,0,0,Math.PI/2);
-  add(new THREE.TorusGeometry(0.34,0.02,6,16), flat(0x222222),0,0, 0.13);
-  add(new THREE.TorusGeometry(0.34,0.02,6,16), flat(0x222222),0,0,-0.13);
-  add(new THREE.CylinderGeometry(0.27,0.27,0.28,12), phong(C.carRim,{shininess:180}),0,0,0,0,0,Math.PI/2);
-  add(new THREE.TorusGeometry(0.265,0.025,6,16), phong(C.carChrome,{shininess:220}),0,0,0.14);
-  for(let i=0;i<5;i++){
-    const a=(i/5)*Math.PI*2, sx=Math.cos(a)*0.14, sy=Math.sin(a)*0.14;
-    const spoke=new THREE.Mesh(new THREE.BoxGeometry(0.055,0.260,0.05),phong(C.carRim,{shininess:160}));
-    spoke.position.set(sy,sx,0.06); spoke.rotation.z=a; root.add(spoke);
+
+  // Chunky off-road tire — wider profile
+  add(new THREE.CylinderGeometry(0.42, 0.42, 0.34, 14), flat(0x111111), 0,0,0, 0,0,Math.PI/2);
+  // Tire shoulder (slightly wider ridge)
+  add(new THREE.CylinderGeometry(0.43, 0.43, 0.06, 14), flat(0x1a1a1a), 0,0, 0.165, 0,0,Math.PI/2);
+  add(new THREE.CylinderGeometry(0.43, 0.43, 0.06, 14), flat(0x1a1a1a), 0,0,-0.165, 0,0,Math.PI/2);
+
+  // Tread knobs (radial pattern around tire)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const knob = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.10, 0.26),
+      flat(0x222222)
+    );
+    knob.position.set(Math.sin(a)*0.41, Math.cos(a)*0.41, 0);
+    knob.rotation.z = a;
+    root.add(knob);
   }
-  add(new THREE.CylinderGeometry(0.065,0.065,0.10,8),phong(0xcccccc,{shininess:200}),0,0,0.10,0,0,Math.PI/2);
-  add(new THREE.CylinderGeometry(0.19,0.19,0.04,12),flat(0x555555),0,0,-0.02,0,0,Math.PI/2);
-  add(new THREE.BoxGeometry(0.08,0.14,0.08),flat(0xee4444),0,0.19,-0.02);
+  // Second row of knobs (offset)
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 + 0.31;
+    const knob = new THREE.Mesh(
+      new THREE.BoxGeometry(0.07, 0.08, 0.14),
+      flat(0x1e1e1e)
+    );
+    knob.position.set(Math.sin(a)*0.41, Math.cos(a)*0.41, 0.10);
+    knob.rotation.z = a;
+    root.add(knob);
+  }
+
+  // Sidewall ring detail
+  add(new THREE.TorusGeometry(0.38, 0.025, 6, 18), flat(0x2a2a2a), 0,0, 0.15);
+  add(new THREE.TorusGeometry(0.38, 0.025, 6, 18), flat(0x2a2a2a), 0,0,-0.15);
+
+  // 5-spoke SUV rim (silver)
+  add(new THREE.CylinderGeometry(0.30, 0.30, 0.32, 12), phong(0xc0c0c0, { shininess:160 }), 0,0,0, 0,0,Math.PI/2);
+  // Rim lip
+  add(new THREE.TorusGeometry(0.295, 0.03, 6, 16), phong(0xd8d8d8, { shininess:200 }), 0,0, 0.15);
+  // Rim recessed face
+  add(new THREE.CylinderGeometry(0.26, 0.26, 0.22, 12), flat(0x888888), 0,0,0, 0,0,Math.PI/2);
+
+  // 5 thick spokes
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const spoke = new THREE.Mesh(
+      new THREE.BoxGeometry(0.07, 0.26, 0.08),
+      phong(0xc8c8c8, { shininess:140 })
+    );
+    spoke.position.set(Math.sin(a)*0.13, Math.cos(a)*0.13, 0.08);
+    spoke.rotation.z = a;
+    root.add(spoke);
+    // Spoke shadow/depth
+    const sp2 = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.22, 0.06),
+      flat(0x666666)
+    );
+    sp2.position.set(Math.sin(a)*0.14, Math.cos(a)*0.14, 0.06);
+    sp2.rotation.z = a;
+    root.add(sp2);
+  }
+
+  // Center hub cap
+  add(new THREE.CylinderGeometry(0.07, 0.07, 0.12, 8), phong(0xdddddd, { shininess:200 }), 0,0,0.12, 0,0,Math.PI/2);
+  // Lug nut detail
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    add(new THREE.CylinderGeometry(0.018, 0.018, 0.06, 6), flat(0xaaaaaa),
+      Math.sin(a)*0.09, Math.cos(a)*0.09, 0.14, 0,0,Math.PI/2);
+  }
+
+  // Brake disc (visible through spokes)
+  add(new THREE.CylinderGeometry(0.21, 0.21, 0.05, 12), flat(0x555555), 0,0,-0.03, 0,0,Math.PI/2);
+  // Red brake caliper
+  add(new THREE.BoxGeometry(0.10, 0.16, 0.10), flat(0xdd2222), 0, 0.22,-0.04);
+
   return root;
 }
 
@@ -517,22 +713,25 @@ export default function CyberCarGame() {
     });
 
     // ── Car ──────────────────────────────────────────────────────────────────
-    const chassisBody=new CANNON.Body({mass:145});
-    chassisBody.addShape(new CANNON.Box(new CANNON.Vec3(0.86,.20,1.92)));
-    chassisBody.position.set(0,2.0,-12);
-    chassisBody.allowSleep=false; chassisBody.linearDamping=0.05; chassisBody.angularDamping=0.38;
+    // Thar: heavier, taller chassis, wider track
+    const chassisBody=new CANNON.Body({mass:200});
+    chassisBody.addShape(new CANNON.Box(new CANNON.Vec3(0.95,.28,1.80)));
+    chassisBody.position.set(0,2.4,-12);
+    chassisBody.allowSleep=false; chassisBody.linearDamping=0.06; chassisBody.angularDamping=0.42;
     world.addBody(chassisBody);
 
     const vehicle=new CANNON.RaycastVehicle({chassisBody,indexRightAxis:0,indexUpAxis:1,indexForwardAxis:2});
     const wBase={
-      radius:.36, directionLocal:new CANNON.Vec3(0,-1,0),
-      suspensionStiffness:42, suspensionRestLength:.30,
-      frictionSlip:1.65, dampingRelaxation:2.3, dampingCompression:4.4,
-      maxSuspensionForce:100000, rollInfluence:.005,
+      radius:.42,  // bigger off-road tires
+      directionLocal:new CANNON.Vec3(0,-1,0),
+      suspensionStiffness:38, suspensionRestLength:.36,  // softer = more travel
+      frictionSlip:1.80, dampingRelaxation:2.2, dampingCompression:4.2,
+      maxSuspensionForce:120000, rollInfluence:.008,
       axleLocal:new CANNON.Vec3(1,0,0), chassisConnectionPointLocal:new CANNON.Vec3(0,0,0),
-      maxSuspensionTravel:.28, useCustomSlidingRotationalSpeed:true, customSlidingRotationalSpeed:-30,
+      maxSuspensionTravel:.35, useCustomSlidingRotationalSpeed:true, customSlidingRotationalSpeed:-30,
     };
-    [[-0.88,.05,1.40],[.88,.05,1.40],[-0.88,.05,-1.40],[.88,.05,-1.40]].forEach(([x,y,z2])=>
+    // Wider track, wheels connect lower on chassis
+    [[-0.98,-.05,1.40],[.98,-.05,1.40],[-0.98,-.05,-1.40],[.98,-.05,-1.40]].forEach(([x,y,z2])=>
       vehicle.addWheel({...wBase,chassisConnectionPointLocal:new CANNON.Vec3(x,y,z2)})
     );
     vehicle.addToWorld(world);

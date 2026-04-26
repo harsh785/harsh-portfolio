@@ -1,19 +1,26 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Gamepad2 } from "lucide-react";
+import GameSection from "./GameSection";
 
 const links = ["About", "Experience", "Skills", "Achievements", "Contact"];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [gameOpen, setGameOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = gameOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [gameOpen]);
 
   const scrollTo = (id: string) => {
     document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: "smooth" });
@@ -49,6 +56,13 @@ export default function Navbar() {
                 {link}
               </button>
             ))}
+            <button
+              onClick={() => { setGameOpen(true); setMenuOpen(false); }}
+              className="text-sm flex items-center gap-1.5 text-[#39ff14] hover:text-[#39ff14]/70 transition-colors duration-200 font-medium"
+            >
+              <Gamepad2 size={14} />
+              Game
+            </button>
             <a
               href="/resume.pdf"
               target="_blank"
@@ -84,6 +98,32 @@ export default function Navbar() {
                 {link}
               </button>
             ))}
+            <button
+              onClick={() => { setGameOpen(true); setMenuOpen(false); }}
+              className="text-2xl font-semibold text-[#39ff14] hover:text-[#39ff14]/70 transition-colors flex items-center gap-2"
+            >
+              <Gamepad2 size={22} /> Game
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Game overlay */}
+      <AnimatePresence>
+        {gameOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-[#0a0a0f]"
+          >
+            <button
+              onClick={() => setGameOpen(false)}
+              className="absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:border-white/20 transition-all text-sm font-mono"
+            >
+              <X size={14} /> close
+            </button>
+            <GameSection />
           </motion.div>
         )}
       </AnimatePresence>

@@ -422,7 +422,7 @@ export default function CyberCarGame() {
             <div className="text-xs text-slate-500">LAPS</div>
             <div className="text-xl font-black" style={{ color: S_RED }}>{lap}</div>
           </div>
-          <Link href="/harsh-portfolio/"
+          <Link href="/"
             className="px-4 py-2 rounded-lg border text-sm transition-all hover:scale-105"
             style={{ borderColor: "rgba(137,220,235,0.3)", color: S_CYAN, background: "rgba(137,220,235,0.05)" }}>
             ← Portfolio

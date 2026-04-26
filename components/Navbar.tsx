@@ -52,7 +52,7 @@ export default function Navbar() {
               </button>
             ))}
             <Link
-              href="/harsh-portfolio/game"
+              href="/game"
               className="text-sm flex items-center gap-1.5 text-[#a6e3a1] hover:text-[#a6e3a1]/70 transition-colors duration-200 font-medium"
             >
               <Gamepad2 size={14} />
@@ -95,7 +95,7 @@ export default function Navbar() {
               </button>
             ))}
             <Link
-              href="/harsh-portfolio/game"
+              href="/game"
               onClick={() => setMenuOpen(false)}
               className="text-2xl font-semibold text-[#a6e3a1] hover:text-[#a6e3a1]/70 transition-colors flex items-center gap-2"
             >

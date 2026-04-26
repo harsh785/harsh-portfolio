@@ -102,11 +102,15 @@ function MagneticCard({
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigator.clipboard.writeText(card.value);
-    setCopied(true);
-    setRipple(true);
-    setTimeout(() => setCopied(false), 2000);
-    setTimeout(() => setRipple(false), 600);
+    if (card.href.startsWith("http")) {
+      window.open(card.href, "_blank", "noopener,noreferrer");
+    } else {
+      navigator.clipboard.writeText(card.value);
+      setCopied(true);
+      setRipple(true);
+      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setRipple(false), 600);
+    }
   };
 
   return (
@@ -231,7 +235,7 @@ export default function Contact() {
           </div>
           <h2 className="text-4xl font-bold text-white">Get In Touch</h2>
           <p className="text-slate-500 mt-2 text-sm font-mono">
-            move your cursor near the cards · click to copy
+            move your cursor near the cards · click to open or copy
           </p>
         </motion.div>
 

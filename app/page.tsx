@@ -10,7 +10,6 @@ import InteractiveTerminal from "@/components/InteractiveTerminal";
 import Contact from "@/components/Contact";
 import BootSequence from "@/components/BootSequence";
 import CursorGlow from "@/components/CursorGlow";
-import CyberCar from "@/components/CyberCar";
 export default function Home() {
   const [booted, setBooted] = useState(false);
 
@@ -20,7 +19,6 @@ export default function Home() {
       <BootSequence onDone={() => setBooted(true)} />
       {booted && (
         <>
-          <CyberCar />
           <Navbar />
           <main>
             <Hero />

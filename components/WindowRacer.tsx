@@ -225,20 +225,22 @@ export default function WindowRacer() {
     };
   }, []);
 
-  if (!visible) return null;
-
   return (
     <>
       <canvas
         ref={canvasRef}
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 5 }}
+        style={{ zIndex: 5, display: visible ? "block" : "none" }}
       />
-      {/* Toggle button */}
+      {/* Toggle button — always rendered */}
       <button
         onClick={() => setVisible(v => !v)}
-        className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full border border-[#e63946]/40 bg-[#0d0d14]/80 backdrop-blur-md flex items-center justify-center text-base transition-all hover:border-[#e63946]/80 hover:scale-110"
-        title="Toggle window racer"
+        className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full border backdrop-blur-md flex items-center justify-center text-base transition-all hover:scale-110"
+        style={{
+          borderColor: visible ? "rgba(230,57,70,0.6)" : "rgba(255,255,255,0.15)",
+          background: visible ? "rgba(230,57,70,0.12)" : "rgba(13,13,20,0.8)",
+        }}
+        title={visible ? "Hide racer" : "Show racer"}
       >
         🏎
       </button>

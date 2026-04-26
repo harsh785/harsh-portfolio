@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Menu, X, Gamepad2 } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 const links = ["About", "Experience", "Skills", "Achievements", "Contact"];
@@ -51,13 +51,6 @@ export default function Navbar() {
                 {link}
               </button>
             ))}
-            <Link
-              href="/game"
-              className="text-sm flex items-center gap-1.5 text-[#a6e3a1] hover:text-[#a6e3a1]/70 transition-colors duration-200 font-medium"
-            >
-              <Gamepad2 size={14} />
-              Game
-            </Link>
             <a
               href="/resume.pdf"
               target="_blank"
@@ -94,13 +87,6 @@ export default function Navbar() {
                 {link}
               </button>
             ))}
-            <Link
-              href="/game"
-              onClick={() => setMenuOpen(false)}
-              className="text-2xl font-semibold text-[#a6e3a1] hover:text-[#a6e3a1]/70 transition-colors flex items-center gap-2"
-            >
-              <Gamepad2 size={22} /> Game
-            </Link>
             <ThemeToggle />
           </motion.div>
         )}
